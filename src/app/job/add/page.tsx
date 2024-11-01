@@ -1,30 +1,46 @@
 'use client';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+interface JobFormData {
+  title: string;
+  description: string;
+  id_employer: number;
+  category: string;
+  state: string;
+  num_workers: number;
+  pay: number;
+  location: string;
+  time: string;
+}
 
 export default function JobAdd() {
-  const [formData, setFormData] = useState({
-    username: '',
-    recipientUsername: '',
-    vanityUrl: '',
-    amount: '',
-    serverUsername: '',
-    server: '',
-    textarea: '',
+  const router = useRouter();
+  const [formData, setFormData] = useState<JobFormData>({
+    title: '',
+    description: '',
+    id_employer: 1, // Default value or get from session
+    category: '',
+    state: '',
+    num_workers: 1,
+    pay: 0,
+    location: '',
+    time: new Date().toISOString(),
   });
 
-  const handleChange = (e: { target: { name: any; value: any; }; }) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'num_workers' || name === 'pay' ? Number(value) : value,
+    }));
   };
 
-  const handleSubmit = async (e: { preventDefault: () => void; }) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      const response = await fetch('/api/jobs', {
+      const response = await fetch('/api/job', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -35,120 +51,153 @@ export default function JobAdd() {
       const result = await response.json();
 
       if (response.ok) {
-        // Handle success
-        console.log('Job added successfully:', result);
+        alert('Job posted successfully!');
+        router.push('/job'); // Redirect to jobs list
       } else {
-        // Handle error
-        console.error('Failed to add job:', result.message);
+        alert('Failed to post job: ' + result.message);
       }
     } catch (error) {
       console.error('Error submitting form:', error);
+      alert('Error posting job. Please try again.');
     }
   };
 
   return (
     <main className="container my-4">
-      <h2 className="mb-4 text-center">User Information</h2>
+      <div className="row justify-content-center">
+        <div className="col-md-8">
+          <div className="card shadow">
+            <div className="card-body">
+              <h2 className="card-title text-center mb-4">Post a New Job</h2>
 
-      {/* Form with onSubmit handler */}
-      <form onSubmit={handleSubmit}>
-        {/* Username input with prefix */}
-        <div className="input-group mb-3">
-          <span className="input-group-text" id="basic-addon1">@</span>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Username"
-            aria-label="Username"
-            aria-describedby="basic-addon1"
-            name="username"
-            value={formData.username}
-            onChange={handleChange}
-          />
+              <form onSubmit={handleSubmit}>
+                {/* Job Title */}
+                <div className="mb-3">
+                  <label htmlFor="title" className="form-label">Job Title</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="title"
+                    name="title"
+                    value={formData.title}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                {/* Job Description */}
+                <div className="mb-3">
+                  <label htmlFor="description" className="form-label">Description</label>
+                  <textarea
+                    className="form-control"
+                    id="description"
+                    name="description"
+                    rows={4}
+                    value={formData.description}
+                    onChange={handleChange}
+                    required
+                  ></textarea>
+                </div>
+
+                {/* Category */}
+                <div className="mb-3">
+                  <label htmlFor="category" className="form-label">Category</label>
+                  <select
+                    className="form-select"
+                    id="category"
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">Select a category</option>
+                    <option value="Full-time">Full-time</option>
+                    <option value="Part-time">Part-time</option>
+                    <option value="Contract">Contract</option>
+                  </select>
+                </div>
+
+                {/* Location and State */}
+                <div className="row mb-3">
+                  <div className="col-md-6">
+                    <label htmlFor="location" className="form-label">Location</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="location"
+                      name="location"
+                      value={formData.location}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label htmlFor="state" className="form-label">State</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="state"
+                      name="state"
+                      value={formData.state}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Pay and Workers */}
+                <div className="row mb-3">
+                  <div className="col-md-6">
+                    <label htmlFor="pay" className="form-label">Pay Rate ($/hr)</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      id="pay"
+                      name="pay"
+                      min="0"
+                      step="0.01"
+                      value={formData.pay}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label htmlFor="num_workers" className="form-label">Number of Workers</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      id="num_workers"
+                      name="num_workers"
+                      min="1"
+                      value={formData.num_workers}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <div className="d-grid gap-2">
+                  <button 
+                    type="submit" 
+                    className="btn btn-success"
+                    style={{ backgroundColor: '#17a589', borderColor: '#17a589' }}
+                  >
+                    Post Job
+                  </button>
+                  <button 
+                    type="button" 
+                    className="btn btn-outline-secondary"
+                    onClick={() => router.push('/job')}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
-
-        {/* Recipient's username input with suffix */}
-        <div className="input-group mb-3">
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Recipient's username"
-            aria-label="Recipient's username"
-            aria-describedby="basic-addon2"
-            name="recipientUsername"
-            value={formData.recipientUsername}
-            onChange={handleChange}
-          />
-          <span className="input-group-text" id="basic-addon2">@example.com</span>
-        </div>
-
-        {/* Vanity URL input with prefix */}
-        <label htmlFor="basic-url" className="form-label">Your vanity URL</label>
-        <div className="input-group mb-3">
-          <span className="input-group-text" id="basic-addon3">https://example.com/users/</span>
-          <input
-            type="text"
-            className="form-control"
-            id="basic-url"
-            aria-describedby="basic-addon3"
-            name="vanityUrl"
-            value={formData.vanityUrl}
-            onChange={handleChange}
-          />
-        </div>
-
-        {/* Amount input with prefix and suffix */}
-        <div className="input-group mb-3">
-          <span className="input-group-text">$</span>
-          <input
-            type="text"
-            className="form-control"
-            aria-label="Amount (to the nearest dollar)"
-            name="amount"
-            value={formData.amount}
-            onChange={handleChange}
-          />
-          <span className="input-group-text">.00</span>
-        </div>
-
-        {/* Server username input */}
-        <div className="input-group mb-3">
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Username"
-            aria-label="Username"
-            name="serverUsername"
-            value={formData.serverUsername}
-            onChange={handleChange}
-          />
-          <span className="input-group-text">@</span>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Server"
-            aria-label="Server"
-            name="server"
-            value={formData.server}
-            onChange={handleChange}
-          />
-        </div>
-
-        {/* Textarea input group */}
-        <div className="input-group mb-3">
-          <span className="input-group-text">With textarea</span>
-          <textarea
-            className="form-control"
-            aria-label="With textarea"
-            name="textarea"
-            value={formData.textarea}
-            onChange={handleChange}
-          ></textarea>
-        </div>
-
-        {/* Submit button */}
-        <button type="submit" className="btn btn-primary">Submit</button>
-      </form>
+      </div>
     </main>
   );
 }
