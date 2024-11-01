@@ -1,0 +1,27 @@
+.card-custom {
+  width: 100%; /* Ensures the cards fill the column width */
+  max-width: 250px; /* Sets a smaller maximum width for the cards */
+}
+
+.card-image {
+  width: 100%;  /* Ensures the image fills the card */
+  height: auto; /* Maintains the aspect ratio */
+  max-height: 150px; /* Optional limit for the image's height */
+}
+
+/* Style for the buttons */
+.btn-success {
+  background-color: #17a589; /* Change button color to custom green */
+  border-color: #17a589;     /* Match the border color */
+}
+
+/* Hover effect for buttons */
+.btn-success:hover, .btn-success:focus {
+  background-color: black; /* Change hover color to black */
+  border-color: black;     /* Match border color on hover */
+}
+
+.card .btn:hover {
+  background-color: black;
+  border-color: black;
+}

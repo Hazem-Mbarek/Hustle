@@ -1,27 +1,88 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Navbar with White Background and Black Text */
+.navbar-light {
+  background-color: #ffffff; /* White background for the navbar */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.navbar-light .navbar-nav .nav-link {
+  color: #000000; /* Black text color */
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+.navbar-light .navbar-nav .nav-link:hover,
+.navbar-light .navbar-nav .nav-link:focus {
+  color: #17a589; /* Custom green hover effect */
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+/* Dropdown menu background and item text colors */
+.dropdown-menu {
+  background-color: #ffffff; /* White background for dropdown menu */
+}
+
+.dropdown-item {
+  color: #000000; /* Black text for dropdown items */
+}
+
+.dropdown-item:hover {
+  color: #ffffff; /* Light text on hover */
+  background-color: #17a589; /* Green background on hover */
+}
+
+.dropdown-item:focus {
+  background-color: #17a589; /* Active state for dropdown items */
+  color: #ffffff; /* Ensure text is white */
+}
+
+.dropdown-divider {
+  background-color: #17a589; /* Green divider in dropdown */
+}
+
+/* Toggler button for mobile */
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%231eb39f' viewBox='0 0 30 30'%3E%3Cpath stroke='rgba(30, 179, 159, 1)' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+}
+
+/* Custom styles for links */
+.custom-nav-link {
+  font-size: 1.2rem; /* Adjust the font size */
+  color: #000000; /* Black text color */
+}
+
+/* Custom styles for the carousel */
+.custom-carousel {
+  height: 1000px; /* Set your desired height here */
+  overflow: hidden; /* Ensure no overflow occurs */
+}
+
+.custom-carousel img {
+  height: 100%; /* Make the image fill the height of the carousel */
+  object-fit: cover; /* Ensure the image covers the area without stretching */
+}
+
+/* Learn more button styling */
+.learn-more-btn {
+  position: absolute; /* Position the button absolutely */
+  top: 550px; /* Adjust this value to position the button vertically */
+  left: 50%; /* Center the button horizontally */
+  transform: translateX(-50%); /* Center the button based on its width */
+  z-index: 10; /* Ensure the button is above the images */
+  background-color: #17a589; /* Button color */
+  color: #ffffff; /* Button text color */
+  padding: 10px 20px; /* Adjust padding for better appearance */
+  border: none; /* Remove border */
+  border-radius: 5px; /* Rounded corners */
+}
+
+/* Alert styling */
+.centered-alert {
+  padding: 20px 30px; /* Increased padding for a larger size */
+  font-size: 1.25rem; /* Increased font size */
+  max-width: 500px; /* Set a max width for better control */
+  position: absolute; /* Use absolute positioning */
+  top: 50%; /* Center vertically */
+  left: 50%; /* Center horizontally */
+  transform: translate(-50%, -50%); /* Adjust position to be centered */
+  text-align: center; /* Center text inside the alert */
+}
+
+.icon-danger {
+  font-size: 2rem; /* Adjust icon size for better proportion */
 }

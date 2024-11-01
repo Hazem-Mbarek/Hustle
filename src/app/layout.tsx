@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import InstallBootstrap from "./components/installBootstrap";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -24,11 +26,137 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+    <html lang="en" className="h-100">  {/* Make html full height */}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white d-flex flex-column h-100`}>
+        <InstallBootstrap />
+
+        {/* Include Bootstrap Icons */}
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
+
+       {/* Inverted Navbar with Dark Background and Light Text */}
+       <nav className="navbar navbar-expand-lg bg-white navbar-light py-4">
+  <div className="container-fluid">
+    {/* Navbar Toggler Button for Mobile View */}
+    <button
+      className="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarPillsExample"
+      aria-controls="navbarPillsExample"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span className="navbar-toggler-icon"></span>
+    </button>
+
+    {/* Brand Logo 
+    <a className="navbar-brand" href="#">
+      <img src="/images/logo4.png" width="36" alt="Brand Logo" />
+    </a>
+*/}
+    {/* Navbar Links and Dropdown */}
+    <div className="collapse navbar-collapse" id="navbarPillsExample">
+      <ul className="navbar-nav navbar-nav-pills">
+        <li className="nav-item">
+          <a className="nav-link custom-nav-link" href="#">
+            Home
+          </a>
+        </li>
+        <li className="nav-item">
+          <a className="nav-link custom-nav-link" href="#">
+            Team
+          </a>
+        </li>
+        <li className="nav-item dropdown">
+          <a
+            className="nav-link dropdown-toggle custom-nav-link"
+            href="#"
+            role="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            Projects
+          </a>
+          <ul className="dropdown-menu bg-white">
+            <li><a className="dropdown-item" href="#">Action</a></li>
+            <li><a className="dropdown-item" href="#">Another action</a></li>
+            <li><hr className="dropdown-divider" /></li>
+            <li><a className="dropdown-item" href="#">Something else here</a></li>
+          </ul>
+        </li>
+        <li className="nav-item">
+          <a className="nav-link custom-nav-link" href="#">
+            Profile
+          </a>
+        </li>
+      </ul>
+    </div>
+    <hr className="my-4" />
+  </div>
+  <hr className="my-4" />
+</nav>
+
+
+        {/* Main content area (flex-grow to push footer to bottom) */}
+        <main className="flex-grow-1">
+          {children}
+        </main>
+
+        {/* Sticky Footer */}
+        <footer className="py-4 mt-auto" style={{ backgroundColor: '#1eb39f' }}>
+          <div className="container">
+            <div className="row">
+              {/* Contact Section */}
+              <div className="col-md-4">
+                <h5 className="text-black">Contact Us</h5>
+                <ul className="list-unstyled text-black">
+                  <li>Email: contact@example.com</li>
+                  <li>Phone: +123 456 789</li>
+                  <li>Address: 123 Bootstrap Ave, City</li>
+                </ul>
+              </div>
+
+              {/* Quick Links Section */}
+              <div className="col-md-4">
+                <h5 className="text-black">Quick Links</h5>
+                <ul className="list-unstyled">
+                  <li><a href="#" className="text-black text-decoration-none">Home</a></li>
+                  <li><a href="#" className="text-black text-decoration-none">Projects</a></li>
+                  <li><a href="#" className="text-black text-decoration-none">Team</a></li>
+                  <li><a href="#" className="text-black text-decoration-none">Contact</a></li>
+                </ul>
+              </div>
+
+              {/* Social Media Section */}
+              <div className="col-md-4">
+                <h5 className="text-black">Follow Us</h5>
+                <ul className="list-inline">
+                  <li className="list-inline-item">
+                    <a href="#" className="text-black">
+                      <i className="bi bi-facebook"></i> Facebook
+                    </a>
+                  </li>
+                  <li className="list-inline-item">
+                    <a href="#" className="text-black">
+                      <i className="bi bi-twitter"></i> Twitter
+                    </a>
+                  </li>
+                  <li className="list-inline-item">
+                    <a href="#" className="text-black">
+                      <i className="bi bi-instagram"></i> Instagram
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Bottom line */}
+            <div className="text-center mt-3">
+              <p className="mb-0 text-black">© 2024 Your Company. All rights reserved.</p>
+            </div>
+          </div>
+        </footer>
+
       </body>
     </html>
   );
