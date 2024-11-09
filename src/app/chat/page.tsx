@@ -3,9 +3,7 @@ import { useState, useEffect } from 'react';
 import styles from './chat.module.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPen, faTimes } from '@fortawesome/free-solid-svg-icons';
-
-// Constants
-const CURRENT_USER_ID = 1; // Hardcoded user ID (employee_id = 1)
+import { useRouter } from 'next/navigation';
 
 interface Message {
   message_id: number;
@@ -20,12 +18,12 @@ interface Message {
 
 interface Chat {
   chat_id: number;
-  employee_id: number;
-  employer_id: number;
-  employee_first_name: string;
-  employee_last_name: string;
-  employer_first_name: string;
-  employer_last_name: string;
+  profile_id_1: number;
+  profile_id_2: number;
+  profile1_first_name: string;
+  profile1_last_name: string;
+  profile2_first_name: string;
+  profile2_last_name: string;
 }
 
 interface DeleteModalProps {
@@ -35,7 +33,11 @@ interface DeleteModalProps {
   onCancel: () => void;
 }
 
+// Constants
+const CURRENT_USER_ID = 2; // Hardcoded ID for nour@gmail.com
+
 export default function ChatPage() {
+  const router = useRouter();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [chats, setChats] = useState<Chat[]>([]);
@@ -45,13 +47,12 @@ export default function ChatPage() {
   const [messageToDelete, setMessageToDelete] = useState<number | null>(null);
   const [editingMessage, setEditingMessage] = useState<string>('');
 
-  // Fetch chats for the current user
+  // Fetch chats for the hardcoded user
   useEffect(() => {
     const fetchChats = async () => {
       try {
-        const response = await fetch(`/api/chat?user_id=${CURRENT_USER_ID}`);
+        const response = await fetch(`/api/chat?profile_id=${CURRENT_USER_ID}`);
         const data = await response.json();
-        console.log('Fetched chats:', data);
         setChats(data);
       } catch (error) {
         console.error('Failed to fetch chats:', error);
@@ -67,12 +68,16 @@ export default function ChatPage() {
         try {
           const response = await fetch(`/api/chat?type=messages&chat_id=${selectedChat}`);
           const data = await response.json();
-          setMessages(data);
+          console.log('Received messages:', data);
+          setMessages(Array.isArray(data) ? data : []);
         } catch (error) {
           console.error('Failed to fetch messages:', error);
+          setMessages([]);
         }
       };
       fetchMessages();
+    } else {
+      setMessages([]);
     }
   }, [selectedChat]);
 
@@ -83,10 +88,9 @@ export default function ChatPage() {
       const selectedChatData = chats.find(chat => chat.chat_id === selectedChat);
       if (!selectedChatData) return;
 
-      // Determine receiver_id based on the chat data
-      const receiver_id = selectedChatData.employee_id === CURRENT_USER_ID 
-        ? selectedChatData.employer_id 
-        : selectedChatData.employee_id;
+      const receiver_id = selectedChatData.profile_id_1 === CURRENT_USER_ID 
+        ? selectedChatData.profile_id_2 
+        : selectedChatData.profile_id_1;
 
       const response = await fetch('/api/chat?type=message', {
         method: 'POST',
@@ -103,10 +107,10 @@ export default function ChatPage() {
 
       if (response.ok) {
         setMessage('');
-        // Refresh messages
         const updatedResponse = await fetch(`/api/chat?type=messages&chat_id=${selectedChat}`);
-        const data = await updatedResponse.json();
-        setMessages(data);
+        const updatedData = await updatedResponse.json();
+        console.log('Updated messages:', updatedData);
+        setMessages(Array.isArray(updatedData) ? updatedData : []);
       }
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -173,13 +177,13 @@ export default function ChatPage() {
     if (!isOpen) return null;
 
     return (
-      <div className={styles.modalOverlay}>
-        <div className={styles.modal}>
+      <div className={styles.modalOverlay} onClick={onCancel}>
+        <div className={styles.modal} onClick={e => e.stopPropagation()}>
           <h3>Delete Message</h3>
           <p>Are you sure you want to delete this message? This action cannot be undone.</p>
           <div className={styles.modalButtons}>
             <button className={styles.cancelButton} onClick={onCancel}>Cancel</button>
-            <button className={styles.deleteButton} onClick={() => onConfirm()}>Delete</button>
+            <button className={styles.deleteButton} onClick={onConfirm}>Delete</button>
           </div>
         </div>
       </div>
@@ -212,13 +216,13 @@ export default function ChatPage() {
                   className={styles.chatContent}
                   onClick={() => setSelectedChat(chat.chat_id)}
                 >
-                  {chat.employee_id === CURRENT_USER_ID ? (
+                  {chat.profile_id_1 === CURRENT_USER_ID ? (
                     <div className={styles.chatPartner}>
-                      Employer {chat.employer_first_name} {chat.employer_last_name}
+                      {chat.profile2_first_name} {chat.profile2_last_name}
                     </div>
                   ) : (
                     <div className={styles.chatPartner}>
-                      Employee {chat.employee_first_name} {chat.employee_last_name}
+                      {chat.profile1_first_name} {chat.profile1_last_name}
                     </div>
                   )}
                 </div>

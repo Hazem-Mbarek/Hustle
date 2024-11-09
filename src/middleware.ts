@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
 
 // Define public routes that don't require authentication
-const publicRoutes = ['/', '/login', '/register'];
+const publicRoutes = ['/', '/login', '/register', '/signup'];
 
 export function middleware(request: NextRequest) {
   const isPublicRoute = publicRoutes.some(route => 
@@ -32,7 +32,9 @@ export const config = {
   matcher: [
     '/job/:path*',
     '/profile/:path*',
+    '/chat/:path*',
     '/api/job/:path*',
     '/api/user/:path*',
+    '/api/chat/:path*',
   ]
 }; 

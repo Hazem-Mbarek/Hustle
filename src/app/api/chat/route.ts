@@ -12,8 +12,8 @@ interface MessageData {
 }
 
 interface ChatData {
-    employee_id: number;
-    employer_id: number;
+    profile_id_1: number;
+    profile_id_2: number;
 }
 
 // Main POST handler
@@ -24,7 +24,6 @@ export async function POST(request: Request) {
 
   try {
     if (type === 'message') {
-      // Handle message creation
       const messageData: MessageData = await request.json();
       
       const [result] = await pool.query(
@@ -46,23 +45,21 @@ export async function POST(request: Request) {
         id: (result as ResultSetHeader).insertId 
       }, { status: 201 });
     } else {
-      // Handle chat creation
       const chatData: ChatData = await request.json();
       
       // Check if chat already exists between these users
       const [existingChats] = await pool.query(
         `SELECT * FROM chats 
-         WHERE (employee_id = ? AND employer_id = ?) 
-         OR (employee_id = ? AND employer_id = ?)`,
+         WHERE (profile_id_1 = ? AND profile_id_2 = ?) 
+         OR (profile_id_1 = ? AND profile_id_2 = ?)`,
         [
-          chatData.employee_id, 
-          chatData.employer_id,
-          chatData.employer_id, 
-          chatData.employee_id
+          chatData.profile_id_1, 
+          chatData.profile_id_2,
+          chatData.profile_id_2, 
+          chatData.profile_id_1
         ]
       );
 
-      // If chat exists, return the existing chat
       if ((existingChats as any[]).length > 0) {
         return NextResponse.json({ 
           message: 'Chat already exists',
@@ -70,10 +67,9 @@ export async function POST(request: Request) {
         }, { status: 200 });
       }
 
-      // If chat doesn't exist, create new chat
       const [result] = await pool.query(
-        `INSERT INTO chats (employee_id, employer_id) VALUES (?, ?)`,
-        [chatData.employee_id, chatData.employer_id]
+        `INSERT INTO chats (profile_id_1, profile_id_2) VALUES (?, ?)`,
+        [chatData.profile_id_1, chatData.profile_id_2]
       );
 
       return NextResponse.json({ 
@@ -93,7 +89,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type');
   const chat_id = searchParams.get('chat_id');
-  const user_id = searchParams.get('user_id');
+  const profile_id = searchParams.get('profile_id');
 
   try {
     if (type === 'messages') {
@@ -101,24 +97,34 @@ export async function GET(request: Request) {
         return NextResponse.json({ message: 'Chat ID is required' }, { status: 400 });
       }
       const [rows] = await pool.query('SELECT * FROM messages WHERE chat_id = ?', [chat_id]);
-      return NextResponse.json(rows);
+      return NextResponse.json(Array.isArray(rows) ? rows : []);
     } else {
-      if (!user_id) {
-        return NextResponse.json({ message: 'User ID is required' }, { status: 400 });
+      if (!profile_id) {
+        return NextResponse.json({ message: 'Profile ID is required' }, { status: 400 });
       }
       const [rows] = await pool.query(
-        `SELECT c.*, 
-          e.first_name as employee_first_name, 
-          e.last_name as employee_last_name,
-          em.first_name as employer_first_name, 
-          em.last_name as employer_last_name 
+        `SELECT 
+          c.chat_id,
+          c.profile_id_1,
+          c.profile_id_2,
+          CASE 
+            WHEN c.profile_id_1 = ? THEN u2.first_name
+            ELSE u1.first_name
+          END as profile2_first_name,
+          CASE 
+            WHEN c.profile_id_1 = ? THEN u2.last_name
+            ELSE u1.last_name
+          END as profile2_last_name
         FROM chats c
-        LEFT JOIN users e ON c.employee_id = e.id_user
-        LEFT JOIN users em ON c.employer_id = em.id_user
-        WHERE c.employee_id = ? OR c.employer_id = ?`,
-        [user_id, user_id]
+        LEFT JOIN profiles p1 ON c.profile_id_1 = p1.id_profile
+        LEFT JOIN profiles p2 ON c.profile_id_2 = p2.id_profile
+        LEFT JOIN users u1 ON p1.id_user = u1.id_user
+        LEFT JOIN users u2 ON p2.id_user = u2.id_user
+        WHERE p1.id_profile = ? OR p2.id_profile = ?
+        ORDER BY c.chat_id DESC`,
+        [profile_id, profile_id, profile_id, profile_id]
       );
-      return NextResponse.json(rows);
+      return NextResponse.json(Array.isArray(rows) ? rows : []);
     }
   } catch (error) {
     console.error('Database query failed:', error);
@@ -126,7 +132,7 @@ export async function GET(request: Request) {
   }
 }
 
-// Add this new DELETE handler alongside your existing GET and POST handlers
+// DELETE handler
 export async function DELETE(request: Request) {
   const pool = initDB();
   const { searchParams } = new URL(request.url);
@@ -140,24 +146,15 @@ export async function DELETE(request: Request) {
         return NextResponse.json({ message: 'Message ID is required' }, { status: 400 });
       }
 
-      const [result] = await pool.query(
-        'DELETE FROM messages WHERE message_id = ?',
-        [message_id]
-      );
-
+      await pool.query('DELETE FROM messages WHERE message_id = ?', [message_id]);
       return NextResponse.json({ message: 'Message deleted successfully' });
     } else {
-      // Handle chat deletion if needed
       if (!chat_id) {
         return NextResponse.json({ message: 'Chat ID is required' }, { status: 400 });
       }
 
-      // First delete all messages in the chat
       await pool.query('DELETE FROM messages WHERE chat_id = ?', [chat_id]);
-      
-      // Then delete the chat itself
       await pool.query('DELETE FROM chats WHERE chat_id = ?', [chat_id]);
-
       return NextResponse.json({ message: 'Chat deleted successfully' });
     }
   } catch (error) {
@@ -166,7 +163,7 @@ export async function DELETE(request: Request) {
   }
 }
 
-// Add this new PUT handler alongside your existing handlers
+// PUT handler
 export async function PUT(request: Request) {
   const pool = initDB();
   const { searchParams } = new URL(request.url);
@@ -180,8 +177,7 @@ export async function PUT(request: Request) {
       }
 
       const { content } = await request.json();
-      
-      const [result] = await pool.query(
+      await pool.query(
         'UPDATE messages SET content = ? WHERE message_id = ?',
         [content, message_id]
       );
@@ -195,3 +191,12 @@ export async function PUT(request: Request) {
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
   }
 }
+
+export const config = {
+  matcher: [
+    '/job/:path*',
+    '/profile/:path*',
+    '/api/job/:path*',
+    '/api/user/:path*',
+  ]
+};

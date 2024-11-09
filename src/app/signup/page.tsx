@@ -25,7 +25,7 @@ export default function Signup() {
     setError('');
 
     try {
-      const response = await fetch('/api/user', {
+      const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -36,7 +36,7 @@ export default function Signup() {
       if (response.ok) {
         router.push('/login');
       } else {
-        setError(data.message || 'Registration failed');
+        setError(data.message || 'Signup failed');
       }
     } catch (error) {
       setError('An error occurred. Please try again.');
@@ -129,7 +129,9 @@ export default function Signup() {
                 </div>
 
                 <div className="text-center mt-3">
-                  Already have an account? <Link href="/login">Login</Link>
+                  <small className="text-muted">
+                    Already have an account? <Link href="/login">Login here</Link>
+                  </small>
                 </div>
               </form>
             </div>

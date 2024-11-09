@@ -49,45 +49,59 @@
     overflow-y: auto;
     overflow-x: hidden;
     padding: 20px;
-    padding-bottom: 20px;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-bottom: 0;
   }
   
   .message {
     position: relative;
     max-width: 70%;
-    padding: 10px;
-    border-radius: 10px;
+    padding: 10px 15px;
+    border-radius: 15px;
     margin: 5px 0;
     word-break: break-word;
+  }
+  
+  .messageWrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
   }
   
   .sent {
     align-self: flex-end;
     background-color: #0084ff;
     color: white;
-    padding-right: 35px;
+    border-bottom-right-radius: 5px;
   }
   
   .received {
     align-self: flex-start;
     background-color: #e9ecef;
-    padding-right: 35px;
-  }
-  
-  .messageContent {
-    margin-bottom: 5px;
+    color: #333;
+    border-bottom-left-radius: 5px;
   }
   
   .messageTime {
-    font-size: 0.8em;
+    font-size: 0.75em;
     opacity: 0.7;
     display: flex;
     align-items: center;
-    gap: 8px;
+  }
+  
+  .sent .messageTime {
+    justify-content: flex-end;
+  }
+  
+  .received .messageTime {
+    justify-content: flex-start;
+  }
+  
+  .messageActions {
+    display: flex;
+    gap: 4px;
+    margin-left: 8px;
   }
   
   .inputArea {
@@ -210,12 +224,6 @@
   .deleteChat:hover {
     color: #ff4444;
     background-color: rgba(255, 68, 68, 0.1);
-  }
-  
-  .messageWrapper {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
   }
   
   .deleteMessage {
@@ -355,4 +363,12 @@
   .chatContent {
     flex: 1;
     overflow: hidden;
+  }
+  
+  .received .messageActions {
+    color: #666;
+  }
+  
+  .received .messageActions button:hover {
+    background-color: rgba(0, 0, 0, 0.1);
   }
