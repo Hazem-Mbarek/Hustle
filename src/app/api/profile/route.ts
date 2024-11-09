@@ -2,10 +2,12 @@ import { NextResponse } from 'next/server';
 import { initDB } from '@/lib/db';
 import { OkPacket } from 'mysql2';
 
-interface EmployeeData {
+interface ProfileData {
   description: string;
   image?: Buffer;
-  average_rating?: number;
+  average_rating_employer?: number;
+  average_rating_employee?: number;
+  id_user?: number;
 }
 
 // CREATE (POST)
@@ -13,25 +15,32 @@ export async function POST(request: Request) {
   const pool = initDB();
 
   try {
-    const employeeData: EmployeeData = await request.json();
+    const profileData: ProfileData = await request.json();
 
     const [result] = await pool.query(
-      `INSERT INTO Employees (description, image, average_rating) 
-       VALUES (?, ?, ?)`,
+      `INSERT INTO profiles (
+        description, 
+        image, 
+        average_rating_employer,
+        average_rating_employee,
+        id_user
+      ) VALUES (?, ?, ?, ?, ?)`,
       [
-        employeeData.description,
-        employeeData.image || null,
-        employeeData.average_rating || null
+        profileData.description,
+        profileData.image || null,
+        profileData.average_rating_employer || null,
+        profileData.average_rating_employee || null,
+        profileData.id_user || null
       ]
     );
 
     return NextResponse.json({ 
-      message: 'Employee created successfully',
+      message: 'Profile created successfully',
       id: (result as OkPacket).insertId 
     }, { status: 201 });
 
   } catch (error) {
-    console.error('Failed to create employee:', error);
+    console.error('Failed to create profile:', error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
   }
 }
@@ -44,18 +53,18 @@ export async function GET(request: Request) {
 
   try {
     if (id) {
-      // Get specific employee
-      const [rows] = await pool.query('SELECT * FROM Employees WHERE id_employee = ?', [id]);
-      const employees = rows as any[];
+      // Get specific profile
+      const [rows] = await pool.query('SELECT * FROM profiles WHERE id_profile = ?', [id]);
+      const profiles = rows as any[];
       
-      if (employees.length === 0) {
-        return NextResponse.json({ message: 'Employee not found' }, { status: 404 });
+      if (profiles.length === 0) {
+        return NextResponse.json({ message: 'Profile not found' }, { status: 404 });
       }
       
-      return NextResponse.json(employees[0]);
+      return NextResponse.json(profiles[0]);
     } else {
-      // Get all employees
-      const [rows] = await pool.query('SELECT * FROM Employees');
+      // Get all profiles
+      const [rows] = await pool.query('SELECT * FROM profiles');
       return NextResponse.json(rows);
     }
   } catch (error) {
@@ -72,12 +81,11 @@ export async function PATCH(request: Request) {
 
   try {
     if (!id) {
-      return NextResponse.json({ message: 'Employee ID is required' }, { status: 400 });
+      return NextResponse.json({ message: 'Profile ID is required' }, { status: 400 });
     }
 
     const updateFields = await request.json();
     
-    // Build dynamic query based on provided fields
     const updates = Object.keys(updateFields)
       .filter(key => updateFields[key] !== undefined)
       .map(key => `${key} = ?`);
@@ -87,9 +95,9 @@ export async function PATCH(request: Request) {
     }
 
     const query = `
-      UPDATE Employees 
+      UPDATE profiles 
       SET ${updates.join(', ')}
-      WHERE id_employee = ?
+      WHERE id_profile = ?
     `;
 
     const values = [
@@ -104,13 +112,13 @@ export async function PATCH(request: Request) {
     const affectedRows = (result as OkPacket).affectedRows;
     
     if (affectedRows === 0) {
-      return NextResponse.json({ message: 'Employee not found' }, { status: 404 });
+      return NextResponse.json({ message: 'Profile not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ message: 'Employee updated successfully' }, { status: 200 });
+    return NextResponse.json({ message: 'Profile updated successfully' }, { status: 200 });
 
   } catch (error) {
-    console.error('Failed to update employee:', error);
+    console.error('Failed to update profile:', error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
   }
 }
@@ -122,22 +130,22 @@ export async function DELETE(request: Request) {
   const id = searchParams.get('id');
 
   if (!id) {
-    return NextResponse.json({ message: 'Employee ID is required' }, { status: 400 });
+    return NextResponse.json({ message: 'Profile ID is required' }, { status: 400 });
   }
 
   try {
-    const [result] = await pool.query('DELETE FROM Employees WHERE id_employee = ?', [id]);
+    const [result] = await pool.query('DELETE FROM profiles WHERE id_profile = ?', [id]);
     
     const affectedRows = (result as OkPacket).affectedRows;
     
     if (affectedRows === 0) {
-      return NextResponse.json({ message: 'Employee not found' }, { status: 404 });
+      return NextResponse.json({ message: 'Profile not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ message: 'Employee deleted successfully' }, { status: 200 });
+    return NextResponse.json({ message: 'Profile deleted successfully' }, { status: 200 });
 
   } catch (error) {
-    console.error('Failed to delete employee:', error);
+    console.error('Failed to delete profile:', error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
   }
 }
