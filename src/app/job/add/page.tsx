@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 interface JobFormData {
   title: string;
   description: string;
-  id_employer: number;
   category: string;
   state: string;
   num_workers: number;
@@ -19,7 +18,6 @@ export default function JobAdd() {
   const [formData, setFormData] = useState<JobFormData>({
     title: '',
     description: '',
-    id_employer: 1, // Default value or get from session
     category: '',
     state: '',
     num_workers: 1,

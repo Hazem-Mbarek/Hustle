@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { initDB } from '@/lib/db';
 import { OkPacket } from 'mysql2';
+import jwt from 'jsonwebtoken';
+import { cookies } from 'next/headers';
 
 interface JobData {
   title: string;
@@ -18,19 +20,29 @@ interface JobData {
 
 export async function POST(request: Request) {
   const pool = initDB();
+  const cookieStore = cookies();
+  const authToken = cookieStore.get('auth_token');
+
+  if (!authToken) {
+    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+  }
 
   try {
-    const jobData: JobData = await request.json();
+    // Decode the JWT token to get user information
+    const decoded = jwt.verify(authToken.value, process.env.JWT_SECRET || 'your-secret-key') as any;
+    const userId = decoded.userId;
+
+    const jobData = await request.json();
 
     const [result] = await pool.query(
       `INSERT INTO Jobs (
-        title, description, id_employer, category, 
+        title, description, profile_id, category, 
         state, num_workers, pay, location, time
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         jobData.title,
         jobData.description,
-        jobData.id_employer,
+        userId, // Use the ID from the token instead of the submitted data
         jobData.category,
         jobData.state,
         jobData.num_workers,
