@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import InstallBootstrap from "./components/installBootstrap";
+import Navigation from '@/components/Navigation';
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -33,69 +34,7 @@ export default function RootLayout({
         {/* Include Bootstrap Icons */}
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
 
-       {/* Inverted Navbar with Dark Background and Light Text */}
-       <nav className="navbar navbar-expand-lg bg-white navbar-light py-4">
-  <div className="container-fluid">
-    {/* Navbar Toggler Button for Mobile View */}
-    <button
-      className="navbar-toggler"
-      type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#navbarPillsExample"
-      aria-controls="navbarPillsExample"
-      aria-expanded="false"
-      aria-label="Toggle navigation"
-    >
-      <span className="navbar-toggler-icon"></span>
-    </button>
-
-    {/* Brand Logo 
-    <a className="navbar-brand" href="#">
-      <img src="/images/logo4.png" width="36" alt="Brand Logo" />
-    </a>
-*/}
-    {/* Navbar Links and Dropdown */}
-    <div className="collapse navbar-collapse" id="navbarPillsExample">
-      <ul className="navbar-nav navbar-nav-pills">
-        <li className="nav-item">
-          <a className="nav-link custom-nav-link" href="#">
-            Home
-          </a>
-        </li>
-        <li className="nav-item">
-          <a className="nav-link custom-nav-link" href="#">
-            Team
-          </a>
-        </li>
-        <li className="nav-item dropdown">
-          <a
-            className="nav-link dropdown-toggle custom-nav-link"
-            href="#"
-            role="button"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-          >
-            Projects
-          </a>
-          <ul className="dropdown-menu bg-white">
-            <li><a className="dropdown-item" href="#">Action</a></li>
-            <li><a className="dropdown-item" href="#">Another action</a></li>
-            <li><hr className="dropdown-divider" /></li>
-            <li><a className="dropdown-item" href="#">Something else here</a></li>
-          </ul>
-        </li>
-        <li className="nav-item">
-          <a className="nav-link custom-nav-link" href="#">
-            Profile
-          </a>
-        </li>
-      </ul>
-    </div>
-    <hr className="my-4" />
-  </div>
-  <hr className="my-4" />
-</nav>
-
+        <Navigation />
 
         {/* Main content area (flex-grow to push footer to bottom) */}
         <main className="flex-grow-1">

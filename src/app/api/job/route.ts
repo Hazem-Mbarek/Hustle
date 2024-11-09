@@ -5,13 +5,13 @@ import { OkPacket } from 'mysql2';
 interface JobData {
   title: string;
   description: string;
+  id_employer: number;
   category: string;
   state: string;
   num_workers: number;
   pay: number;
   location: string;
   time: string;
-  profile_Id: number;
 }
 
 // Add a new job
@@ -23,20 +23,20 @@ export async function POST(request: Request) {
     const jobData: JobData = await request.json();
 
     const [result] = await pool.query(
-      `INSERT INTO jobs (
-        title, description, category, state, 
-        num_workers, pay, location, time, profile_Id
+      `INSERT INTO Jobs (
+        title, description, id_employer, category, 
+        state, num_workers, pay, location, time
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         jobData.title,
         jobData.description,
+        jobData.id_employer,
         jobData.category,
         jobData.state,
         jobData.num_workers,
         jobData.pay,
         jobData.location,
-        jobData.time,
-        jobData.profile_Id
+        jobData.time
       ]
     );
 
@@ -60,7 +60,7 @@ export async function GET(request: Request) {
   try {
     if (id) {
       // Get specific job
-      const [rows] = await pool.query('SELECT * FROM jobs WHERE id_job = ?', [id]);
+      const [rows] = await pool.query('SELECT * FROM Jobs WHERE id_job = ?', [id]);
       const jobs = rows as any[];
       
       if (jobs.length === 0) {
@@ -70,7 +70,7 @@ export async function GET(request: Request) {
       return NextResponse.json(jobs[0]);
     } else {
       // Get all jobs
-      const [rows] = await pool.query('SELECT * FROM jobs');
+      const [rows] = await pool.query('SELECT * FROM Jobs');
       return NextResponse.json(rows);
     }
   } catch (error) {
@@ -102,7 +102,7 @@ export async function PATCH(request: Request) {
     }
 
     const query = `
-      UPDATE jobs 
+      UPDATE Jobs 
       SET ${updates.join(', ')}
       WHERE id_job = ?
     `;
@@ -142,7 +142,7 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    const [result] = await pool.query('DELETE FROM jobs WHERE id_job = ?', [id]);
+    const [result] = await pool.query('DELETE FROM Jobs WHERE id_job = ?', [id]);
     
     const affectedRows = (result as OkPacket).affectedRows;
     
