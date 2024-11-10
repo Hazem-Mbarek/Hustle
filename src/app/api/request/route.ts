@@ -27,7 +27,7 @@ async function checkExistingRequest(pool: any, userId: number, jobId: number) {
 // CREATE (POST)
 export async function POST(request: Request) {
   const pool = initDB();
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const authToken = cookieStore.get('auth_token');
 
   if (!authToken) {
@@ -82,10 +82,55 @@ export async function GET(request: Request) {
   const job_id = searchParams.get('job_id');
   const sender_id = searchParams.get('sender_id');
   const receiver_id = searchParams.get('receiver_id');
+  const pending = searchParams.get('pending');
+  const cookieStore = await cookies();
+  const authToken = cookieStore.get('auth_token');
 
   try {
+    // If pending=true, get pending requests for logged in user
+    if (pending === 'true') {
+      if (!authToken) {
+        return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+      }
+
+      // Decode token to get user ID
+      const decoded = jwt.verify(authToken.value, process.env.JWT_SECRET || 'your-secret-key') as any;
+      const userId = decoded.userId;
+
+      // Get profile ID for the user
+      const [profileRows] = await pool.query(
+        'SELECT id_profile FROM profiles WHERE id_user = ?',
+        [userId]
+      );
+      const profiles = profileRows as any[];
+
+      if (profiles.length === 0) {
+        return NextResponse.json({ message: 'Profile not found' }, { status: 404 });
+      }
+
+      const profileId = profiles[0].id_profile;
+
+      // Get pending requests where user is the receiver
+      const [rows] = await pool.query(`
+        SELECT 
+          id_request,
+          id_profile_sender,
+          id_job,
+          status,
+          bid,
+          id_profile_receiver
+        FROM requests r
+        WHERE r.id_profile_receiver = ?
+        AND r.status = 'pending'
+        ORDER BY r.id_request DESC`,
+        [profileId]
+      );
+
+      return NextResponse.json(rows);
+    }
+
+    // Rest of the existing GET logic
     if (id) {
-      // Get specific request
       const [rows] = await pool.query('SELECT * FROM requests WHERE id_request = ?', [id]);
       const requests = rows as any[];
       
@@ -95,19 +140,15 @@ export async function GET(request: Request) {
       
       return NextResponse.json(requests[0]);
     } else if (job_id) {
-      // Get requests for specific job
       const [rows] = await pool.query('SELECT * FROM requests WHERE id_job = ?', [job_id]);
       return NextResponse.json(rows);
     } else if (sender_id) {
-      // Get requests from specific sender
       const [rows] = await pool.query('SELECT * FROM requests WHERE id_profile_sender = ?', [sender_id]);
       return NextResponse.json(rows);
     } else if (receiver_id) {
-      // Get requests for specific receiver
       const [rows] = await pool.query('SELECT * FROM requests WHERE id_profile_receiver = ?', [receiver_id]);
       return NextResponse.json(rows);
     } else {
-      // Get all requests
       const [rows] = await pool.query('SELECT * FROM requests');
       return NextResponse.json(rows);
     }
@@ -122,14 +163,31 @@ export async function PATCH(request: Request) {
   const pool = initDB();
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
+  const action = searchParams.get('action');
+
+  if (!id) {
+    return NextResponse.json({ message: 'Request ID is required' }, { status: 400 });
+  }
 
   try {
-    if (!id) {
-      return NextResponse.json({ message: 'Request ID is required' }, { status: 400 });
+    if (action === 'accept') {
+      // Update the request status to 'accepted'
+      const [result] = await pool.query(
+        'UPDATE requests SET status = ? WHERE id_request = ?',
+        ['accepted', id]
+      );
+
+      const affectedRows = (result as OkPacket).affectedRows;
+      
+      if (affectedRows === 0) {
+        return NextResponse.json({ message: 'Request not found' }, { status: 404 });
+      }
+
+      return NextResponse.json({ message: 'Request accepted successfully' }, { status: 200 });
     }
 
+    // Handle other update cases
     const updateFields = await request.json();
-    
     const updates = Object.keys(updateFields)
       .filter(key => updateFields[key] !== undefined)
       .map(key => `${key} = ?`);
@@ -152,7 +210,6 @@ export async function PATCH(request: Request) {
     ];
 
     const [result] = await pool.query(query, values);
-    
     const affectedRows = (result as OkPacket).affectedRows;
     
     if (affectedRows === 0) {

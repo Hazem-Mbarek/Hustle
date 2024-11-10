@@ -11,6 +11,34 @@ interface RatingData {
   id_job?: number;
 }
 
+// Add this function after the RatingData interface
+async function updateAverageRatings(pool: any, profileId: number) {
+  try {
+    // Calculate overall average rating for the profile
+    const [ratings] = await pool.query(
+      `SELECT AVG(value) as avg_rating 
+       FROM ratings 
+       WHERE id_subject = ? 
+       AND id_job IS NOT NULL`,
+      [profileId]
+    );
+
+    // Update rating in profiles table
+    await pool.query(
+      `UPDATE profiles 
+       SET average_rating = ?
+       WHERE id_profile = ?`,
+      [
+        ratings[0]?.avg_rating || 0,
+        profileId
+      ]
+    );
+  } catch (error) {
+    console.error('Failed to update average ratings:', error);
+    throw error;
+  }
+}
+
 // CREATE (POST)
 export async function POST(request: Request) {
   const pool = initDB();
@@ -71,16 +99,9 @@ export async function POST(request: Request) {
       [ratingData.id_user, ratingData.id_subject, ratingData.value, ratingData.id_job || null]
     );
 
-    // Update average rating in profiles table
-    const [avgRating] = await pool.query(
-      'SELECT AVG(value) as avg_rating FROM ratings WHERE id_subject = ?',
-      [ratingData.id_subject]
-    );
-    
-    await pool.query(
-      'UPDATE profiles SET average_rating = ? WHERE id_profile = ?',
-      [(avgRating as any[])[0].avg_rating, ratingData.id_subject]
-    );
+    // Update average ratings for both user and subject
+    await updateAverageRatings(pool, ratingData.id_user);
+    await updateAverageRatings(pool, ratingData.id_subject);
 
     return NextResponse.json({ 
       message: 'Rating created successfully',
@@ -162,16 +183,8 @@ export async function DELETE(request: Request) {
     // Delete the rating
     const [result] = await pool.query('DELETE FROM ratings WHERE id_rating = ?', [id]);
     
-    // Update average rating
-    const [avgRating] = await pool.query(
-      'SELECT AVG(value) as avg_rating FROM ratings WHERE id_subject = ?',
-      [id_subject]
-    );
-    
-    await pool.query(
-      'UPDATE profiles SET average_rating = ? WHERE id_profile = ?',
-      [(avgRating as any[])[0]?.avg_rating || 0, id_subject]
-    );
+    // Update average ratings for the subject
+    await updateAverageRatings(pool, id_subject);
 
     return NextResponse.json({ message: 'Rating deleted successfully' }, { status: 200 });
 
@@ -221,17 +234,8 @@ export async function PATCH(request: Request) {
       [ratingData.value, id]
     );
 
-    // Update average rating
-    const id_subject = (existingRating as any[])[0].id_subject;
-    const [avgRating] = await pool.query(
-      'SELECT AVG(value) as avg_rating FROM ratings WHERE id_subject = ?',
-      [id_subject]
-    );
-    
-    await pool.query(
-      'UPDATE profiles SET average_rating = ? WHERE id_profile = ?',
-      [(avgRating as any[])[0].avg_rating, id_subject]
-    );
+    // Update average ratings for the subject
+    await updateAverageRatings(pool, ratingData.id_subject);
 
     return NextResponse.json({ message: 'Rating updated successfully' }, { status: 200 });
 

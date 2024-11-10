@@ -84,6 +84,12 @@ export default function Job() {
     fetchProfileId();
   }, []);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      require('bootstrap/dist/js/bootstrap.bundle.min.js');
+    }
+  }, []);
+
   // Get current jobs
   const indexOfLastJob = currentPage * jobsPerPage;
   const indexOfFirstJob = indexOfLastJob - jobsPerPage;

@@ -5,8 +5,7 @@ import { OkPacket } from 'mysql2';
 interface ProfileData {
   description: string;
   image?: Buffer;
-  average_rating_employee: number;
-  average_rating_employer: number;
+  average_rating: number;
   id_user: number;
 }
 
@@ -39,12 +38,11 @@ export async function POST(request: Request) {
     }
 
     const [result] = await pool.query(
-      `INSERT INTO profiles (description, image, average_rating_employee, average_rating_employer, id_user) 
-       VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO profiles (description, image, average_rating, id_user) 
+       VALUES (?, ?, ?, ?)`,
       [
         description,
         imageBuffer,
-        0.00, // Default rating
         0.00, // Default rating
         latestUserId
       ]
