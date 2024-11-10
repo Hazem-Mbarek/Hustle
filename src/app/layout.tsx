@@ -3,7 +3,6 @@ import localFont from "next/font/local";
 import "./globals.css";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import InstallBootstrap from "./components/installBootstrap";
-import Navigation from '@/components/Navigation';
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -27,76 +26,68 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-100">  {/* Make html full height */}
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white d-flex flex-column h-100`}>
-        <InstallBootstrap />
+    <html lang="en" className="h-100"><head /><body className={`${geistSans.variable} ${geistMono.variable} antialiased d-flex flex-column h-100`}>
+      <InstallBootstrap />
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
+      
+      {/* Navbar */}
+      <nav className="navbar navbar-expand-lg">
+        <div className="container">
+          <a className="navbar-brand" href="#">PartTime Hub</a>
+          <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span className="navbar-toggler-icon"></span>
+          </button>
+          <div className="collapse navbar-collapse justify-content-end" id="navbarNav">
+            <ul className="navbar-nav">
+              <li className="nav-item">
+                <a className="nav-link" href="#">Find Jobs</a>
+              </li>
+              <li className="nav-item">
+                <a className="nav-link" href="#">Post a Job</a>
+              </li>
+              <li className="nav-item">
+                <a className="nav-link" href="#">Messages</a>
+              </li>
+              <li className="nav-item">
+                <a className="btn btn-primary ms-2" href="#">Sign In</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
 
-        {/* Include Bootstrap Icons */}
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
+      {children}
 
-        <Navigation />
-
-        {/* Main content area (flex-grow to push footer to bottom) */}
-        <main className="flex-grow-1">
-          {children}
-        </main>
-
-        {/* Sticky Footer */}
-        <footer className="py-4 mt-auto" style={{ backgroundColor: '#1eb39f' }}>
-          <div className="container">
-            <div className="row">
-              {/* Contact Section */}
-              <div className="col-md-4">
-                <h5 className="text-black">Contact Us</h5>
-                <ul className="list-unstyled text-black">
-                  <li>Email: contact@example.com</li>
-                  <li>Phone: +123 456 789</li>
-                  <li>Address: 123 Bootstrap Ave, City</li>
-                </ul>
-              </div>
-
-              {/* Quick Links Section */}
-              <div className="col-md-4">
-                <h5 className="text-black">Quick Links</h5>
-                <ul className="list-unstyled">
-                  <li><a href="#" className="text-black text-decoration-none">Home</a></li>
-                  <li><a href="#" className="text-black text-decoration-none">Projects</a></li>
-                  <li><a href="#" className="text-black text-decoration-none">Team</a></li>
-                  <li><a href="#" className="text-black text-decoration-none">Contact</a></li>
-                </ul>
-              </div>
-
-              {/* Social Media Section */}
-              <div className="col-md-4">
-                <h5 className="text-black">Follow Us</h5>
-                <ul className="list-inline">
-                  <li className="list-inline-item">
-                    <a href="#" className="text-black">
-                      <i className="bi bi-facebook"></i> Facebook
-                    </a>
-                  </li>
-                  <li className="list-inline-item">
-                    <a href="#" className="text-black">
-                      <i className="bi bi-twitter"></i> Twitter
-                    </a>
-                  </li>
-                  <li className="list-inline-item">
-                    <a href="#" className="text-black">
-                      <i className="bi bi-instagram"></i> Instagram
-                    </a>
-                  </li>
-                </ul>
-              </div>
+      {/* Footer */}
+      <footer className="footer bg-dark text-white py-5">
+        <div className="container">
+          <div className="row">
+            <div className="col-md-4">
+              <h5>Contact Us</h5>
+              <ul className="list-unstyled">
+                <li>Email: contact@parttimehub.com</li>
+                <li>Phone: +123 456 789</li>
+              </ul>
             </div>
-
-            {/* Bottom line */}
-            <div className="text-center mt-3">
-              <p className="mb-0 text-black">© 2024 Your Company. All rights reserved.</p>
+            <div className="col-md-4">
+              <h5>Quick Links</h5>
+              <ul className="list-unstyled">
+                <li><a href="#" className="text-white">Find Jobs</a></li>
+                <li><a href="#" className="text-white">Post a Job</a></li>
+                <li><a href="#" className="text-white">About Us</a></li>
+              </ul>
+            </div>
+            <div className="col-md-4">
+              <h5>Follow Us</h5>
+              <div className="social-links">
+                <a href="#" className="text-white me-3"><i className="bi bi-facebook"></i></a>
+                <a href="#" className="text-white me-3"><i className="bi bi-twitter"></i></a>
+                <a href="#" className="text-white"><i className="bi bi-instagram"></i></a>
+              </div>
             </div>
           </div>
-        </footer>
-
-      </body>
-    </html>
+        </div>
+      </footer>
+    </body></html>
   );
 }
