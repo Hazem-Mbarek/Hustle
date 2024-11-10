@@ -63,7 +63,7 @@ export async function POST(request: Request) {
   }
 }
 
-// Get all jobs
+// Get all jobs or specific job
 export async function GET(request: Request) {
   const pool = initDB();
   const { searchParams } = new URL(request.url);
@@ -71,8 +71,13 @@ export async function GET(request: Request) {
 
   try {
     if (id) {
-      // Get specific job
-      const [rows] = await pool.query('SELECT * FROM Jobs WHERE id_job = ?', [id]);
+      // Get specific job with employer information
+      const [rows] = await pool.query(`
+        SELECT j.*, p.id_profile as id_employer 
+        FROM Jobs j
+        JOIN Profiles p ON j.profile_id = p.id_profile
+        WHERE j.id_job = ?
+      `, [id]);
       const jobs = rows as any[];
       
       if (jobs.length === 0) {
@@ -81,8 +86,12 @@ export async function GET(request: Request) {
       
       return NextResponse.json(jobs[0]);
     } else {
-      // Get all jobs
-      const [rows] = await pool.query('SELECT * FROM Jobs');
+      // Get all jobs with employer information
+      const [rows] = await pool.query(`
+        SELECT j.*, p.id_profile as id_employer 
+        FROM Jobs j
+        JOIN Profiles p ON j.profile_id = p.id_profile
+      `);
       return NextResponse.json(rows);
     }
   } catch (error) {

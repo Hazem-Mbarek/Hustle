@@ -86,22 +86,27 @@ export default function Job() {
   };
 
   const handleApply = async (job: Job) => {
-    const requestData = {
-      id_profile_sender: currentUser?.id,
-      id_job: job.id_job,
-      id_profile_receiver: job.id_employer,
-      status: 'pending',
-      bid: job.pay
-    };
-
-    console.log('Request JSON:', requestData);
-
-    if (!currentUser) {
+    /*if (!currentUser) {
       router.push('/login');
       return;
-    }
+    }*/
 
     try {
+      const jobResponse = await fetch(`/api/job?id=${job.id_job}`);
+      if (!jobResponse.ok) throw new Error('Failed to fetch job details');
+      const jobData = await jobResponse.json();
+
+      const requestData = {
+        id_profile_sender: 2,
+        id_job: job.id_job,
+        id_profile_receiver: jobData.profile_id,
+        status: 'pending',
+        bid: 33
+      };
+
+      console.log('Job object:', job);
+      console.log('Request Data:', requestData);
+
       const response = await fetch('/api/request', {
         method: 'POST',
         headers: {
