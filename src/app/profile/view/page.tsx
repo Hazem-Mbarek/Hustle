@@ -226,13 +226,23 @@ const ViewProfile: React.FC = () => {
                   {jobs.map((job) => (
                     <div key={job.id_job} className="col-12 mb-3">
                       <div className="border rounded p-3">
-                        <h5>{job.title}</h5>
-                        <p className="mb-2">{job.description}</p>
-                        <div className="d-flex flex-wrap gap-2">
-                          <span className="badge bg-primary">{job.category}</span>
-                          <span className="badge bg-secondary">{job.location}</span>
-                          <span className="badge bg-success">${job.pay}</span>
-                          <span className="badge bg-info">{job.state}</span>
+                        <div className="d-flex justify-content-between align-items-start">
+                          <div>
+                            <h5>{job.title}</h5>
+                            <p className="mb-2">{job.description}</p>
+                            <div className="d-flex flex-wrap gap-2">
+                              <span className="badge bg-primary">{job.category}</span>
+                              <span className="badge bg-secondary">{job.location}</span>
+                              <span className="badge bg-success">${job.pay}</span>
+                              <span className="badge bg-info">{job.state}</span>
+                            </div>
+                          </div>
+                          <button 
+                            className="btn btn-outline-primary"
+                            onClick={() => router.push(`/job/${job.id_job}`)}
+                          >
+                            View Details
+                          </button>
                         </div>
                       </div>
                     </div>
