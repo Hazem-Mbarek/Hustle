@@ -10,6 +10,7 @@ interface UserProfile {
   first_name: string;
   last_name: string;
   email: string;
+  average_rating: number | null;
 }
 
 const ViewProfile: React.FC = () => {
@@ -71,6 +72,25 @@ const ViewProfile: React.FC = () => {
               
               <h3 className="mb-0">{profile.first_name} {profile.last_name}</h3>
               <p className="text-muted">{profile.email}</p>
+              
+              <div className="text-center mb-3">
+                <div className="d-flex align-items-center justify-content-center">
+                  <span className="h4 mb-0 me-2">Rating:</span>
+                  <div className="d-flex align-items-center">
+                    <span className="h4 mb-0">
+                      {profile.average_rating 
+                        ? Number(profile.average_rating).toFixed(1) 
+                        : 'No ratings yet'}
+                    </span>
+                    <span className="text-warning ms-2">★</span>
+                  </div>
+                </div>
+                {profile.average_rating !== null && profile.average_rating > 0 && (
+                  <small className="text-muted">
+                    Based on user ratings
+                  </small>
+                )}
+              </div>
               
               <div className="mt-4">
                 <button 
