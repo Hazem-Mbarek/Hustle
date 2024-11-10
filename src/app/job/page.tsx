@@ -30,6 +30,7 @@ export default function Job() {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const router = useRouter();
   const [bidAmount, setBidAmount] = useState<number>(0);
+  const [profileId, setProfileId] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -65,6 +66,24 @@ export default function Job() {
     fetchCurrentUser();
   }, []);
 
+  useEffect(() => {
+    const fetchProfileId = async () => {
+      try {
+        const response = await fetch('/api/auth/profile');
+        if (response.ok) {
+          const data = await response.json();
+          setProfileId(data.profileId);
+        } else {
+          console.error('Failed to fetch profile ID');
+        }
+      } catch (error) {
+        console.error('Error fetching profile ID:', error);
+      }
+    };
+
+    fetchProfileId();
+  }, []);
+
   // Get current jobs
   const indexOfLastJob = currentPage * jobsPerPage;
   const indexOfFirstJob = indexOfLastJob - jobsPerPage;
@@ -87,13 +106,18 @@ export default function Job() {
   };
 
   const handleApply = async (job: Job) => {
+    if (!profileId) {
+      alert('Please log in to apply for jobs');
+      return;
+    }
+
     try {
       const jobResponse = await fetch(`/api/job?id=${job.id_job}`);
       if (!jobResponse.ok) throw new Error('Failed to fetch job details');
       const jobData = await jobResponse.json();
 
       const requestData = {
-        id_profile_sender: 2,
+        id_profile_sender: profileId,
         id_job: job.id_job,
         id_profile_receiver: jobData.id_employer,
         status: 'pending',
