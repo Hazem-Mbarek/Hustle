@@ -33,23 +33,23 @@ export default function RootLayout({
       {/* Navbar */}
       <nav className="navbar navbar-expand-lg">
         <div className="container">
-          <a className="navbar-brand" href="#">PartTime Hub</a>
+          <a className="navbar-brand" href="/">PartTime Hub</a>
           <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span className="navbar-toggler-icon"></span>
           </button>
           <div className="collapse navbar-collapse justify-content-end" id="navbarNav">
             <ul className="navbar-nav">
               <li className="nav-item">
-                <a className="nav-link" href="#">Find Jobs</a>
+                <a className="nav-link" href="/">Home</a>
               </li>
               <li className="nav-item">
-                <a className="nav-link" href="#">Post a Job</a>
+                <a className="nav-link" href="/job">Find Jobs</a>
               </li>
               <li className="nav-item">
-                <a className="nav-link" href="#">Messages</a>
+                <a className="nav-link" href="/chat">Messages</a>
               </li>
               <li className="nav-item">
-                <a className="btn btn-primary ms-2" href="#">Sign In</a>
+                <a className="btn btn-primary ms-2" href="/login">Login</a>
               </li>
             </ul>
           </div>
@@ -72,9 +72,9 @@ export default function RootLayout({
             <div className="col-md-4">
               <h5>Quick Links</h5>
               <ul className="list-unstyled">
-                <li><a href="#" className="text-white">Find Jobs</a></li>
-                <li><a href="#" className="text-white">Post a Job</a></li>
-                <li><a href="#" className="text-white">About Us</a></li>
+                <li><a href="/job" className="text-white">Find Jobs</a></li>
+                <li><a href="/chat" className="text-white">Messages</a></li>
+                <li><a href="/" className="text-white">About Us</a></li>
               </ul>
             </div>
             <div className="col-md-4">
