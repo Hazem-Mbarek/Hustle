@@ -89,9 +89,9 @@ export default function Navigation() {
   };
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-light bg-light">
+    <nav className="navbar navbar-expand-lg navbar-light" style={{ backgroundColor: '#20B2AA' }}>
       <div className="container">
-        <Link href="/" className="navbar-brand">PartTime Hub</Link>
+        <Link href="/" className="navbar-brand text-white">Hustle</Link>
         
         <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
           <span className="navbar-toggler-icon"></span>
@@ -100,26 +100,26 @@ export default function Navigation() {
         <div className="collapse navbar-collapse justify-content-end" id="navbarNav">
           <ul className="navbar-nav align-items-center">
             <li className="nav-item">
-              <Link href="/" className="nav-link">Home</Link>
+              <Link href="/" className="nav-link text-white">Home</Link>
             </li>
             <li className="nav-item">
-              <Link href="/job" className="nav-link">Find Jobs</Link>
+              <Link href="/job" className="nav-link text-white">Find Jobs</Link>
             </li>
             {isAuthenticated && (
               <li className="nav-item">
-                <Link href="/job/add" className="nav-link">Create Job</Link>
+                <Link href="/job/add" className="nav-link text-white">Create Job</Link>
               </li>
             )}
             
             {isAuthenticated ? (
               <>
                 <li className="nav-item">
-                  <Link href="/chat" className="nav-link">Messages</Link>
+                  <Link href="/chat" className="nav-link text-white">Messages</Link>
                 </li>
                 <li className="nav-item mx-2">
                   <div className="position-relative">
                     <button
-                      className="btn btn-link nav-link p-0"
+                      className="btn btn-link nav-link p-0 text-white"
                       onClick={() => setShowNotifications(!showNotifications)}
                     >
                       <i className="bi bi-bell fs-4"></i>
@@ -195,20 +195,20 @@ export default function Navigation() {
                 </li>
                 {hasProfile && (
                   <li className="nav-item mx-2">
-                    <Link href="/profile/view" className="nav-link">
+                    <Link href="/profile/view" className="nav-link text-white">
                       <i className="bi bi-person-circle fs-4"></i>
                     </Link>
                   </li>
                 )}
                 <li className="nav-item">
-                  <button onClick={handleLogout} className="btn btn-outline-danger">
+                  <button onClick={handleLogout} className="btn btn-outline-light">
                     Logout
                   </button>
                 </li>
               </>
             ) : (
               <li className="nav-item">
-                <Link href="/login" className="btn btn-primary">Login</Link>
+                <Link href="/login" className="btn btn-outline-light">Login</Link>
               </li>
             )}
           </ul>

@@ -31,9 +31,43 @@ export default function RootLayout({
       <head>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
       </head>
-      <body>
+      <body className={`d-flex flex-column min-vh-100 ${geistSans.variable} ${geistMono.variable}`}>
         <Navigation />
-        {children}
+        <main className="flex-grow-1">
+          {children}
+        </main>
+        <footer className="bg-[#20B2AA] text-white py-5">
+          <div className="container">
+            <div className="row g-4">
+              <div className="col-lg-4">
+                <h5 className="mb-3">About Us</h5>
+                <p className="mb-0">Connecting dreams & opportunities through part-time employment solutions.</p>
+              </div>
+              <div className="col-lg-4">
+                <h5 className="mb-3">Quick Links</h5>
+                <ul className="list-unstyled">
+                  <li className="mb-2"><a href="#" className="text-white text-decoration-none">Find Jobs</a></li>
+                  <li className="mb-2"><a href="#" className="text-white text-decoration-none">Post a Job</a></li>
+                  <li className="mb-2"><a href="#" className="text-white text-decoration-none">Contact Us</a></li>
+                </ul>
+              </div>
+              <div className="col-lg-4">
+                <h5 className="mb-3">Connect With Us</h5>
+                <div className="d-flex gap-3">
+                  <a href="#" className="text-white fs-5"><i className="bi bi-facebook"></i></a>
+                  <a href="#" className="text-white fs-5"><i className="bi bi-twitter"></i></a>
+                  <a href="#" className="text-white fs-5"><i className="bi bi-linkedin"></i></a>
+                  <a href="#" className="text-white fs-5"><i className="bi bi-instagram"></i></a>
+                </div>
+              </div>
+            </div>
+            <hr className="my-4 border-white opacity-25" />
+            <div className="text-center">
+              <small>© 2024 Your Company. All rights reserved.</small>
+            </div>
+          </div>
+        </footer>
+        <InstallBootstrap />
       </body>
     </html>
   );

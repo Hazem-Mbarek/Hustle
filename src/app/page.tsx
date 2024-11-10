@@ -1,168 +1,271 @@
-import React from 'react';
+'use client';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import AOS from 'aos';
+
+// Import team images
+import nour from '@/app/assets/nour chokri.jpg';
+import hazem from '@/app/assets/hazem mbarek.jpg';
+import aalaedine from '@/app/assets/aalaedine kamoun.jpg';
+import mohamedAziz from '@/app/assets/mohamed aziz masmoudi.jpg';
+import douaa from '@/app/assets/douaa boudokhane.jpg';
+import ranim from '@/app/assets/ranim ammar.png';
+
+// Import hero section images
 import Image1 from '@/app/assets/1.jpeg';
 import Image2 from '@/app/assets/2.jpg';
 import Image3 from '@/app/assets/3.jpg';
 
 export default function HomePage() {
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      require('aos/dist/aos.css');
+      AOS.init({
+        duration: 1000,
+        once: true,
+        easing: 'ease-in-out',
+        disable: 'mobile'
+      });
+    }
+  }, []);
+
+  const testimonials = [
+    {
+      text: "The platform made it incredibly easy to find flexible work that fits my schedule. I'm impressed with the quality of opportunities available.",
+      name: "Sarah Johnson",
+      role: "Student",
+      image: "/assets/douaa boudokhane.jpg"
+    },
+    {
+      text: "As an employer, I've found amazing talent through this platform. The process is streamlined and efficient.",
+      name: "Michael Chen",
+      role: "Business Owner",
+      image: "/assets/nour chokri.jpg"
+    },
+    {
+      text: "The support team is exceptional, and the platform's features make job hunting a breeze. Highly recommended!",
+      name: "Emma Davis",
+      role: "Freelancer",
+      image: "/assets/mohamed aziz masmoudi.jpg"
+    }
+  ];
+
+  const teamMembers = [
+    {
+      name: "Nour Chokri",
+      role: "CEO & Founder",
+      image: nour,
+      socials: {
+        linkedin: "#",
+        github: "#",
+        email: "#"
+      }
+    },
+    {
+      name: "Hazem Mbarek",
+      role: "CTO",
+      image: hazem,
+      socials: {
+        linkedin: "#",
+        github: "#",
+        email: "#"
+      }
+    },
+    {
+      name: "Aalaedine Kamoun",
+      role: "Lead Backend Developer",
+      image: aalaedine,
+      socials: {
+        linkedin: "#",
+        github: "#",
+        email: "#"
+      }
+    },
+    {
+      name: "Mohamed Aziz Masmoudi",
+      role: "Lead Frontend Developer",
+      image: mohamedAziz,
+      socials: {
+        linkedin: "#",
+        github: "#",
+        email: "#"
+      }
+    },
+    {
+      name: "Douaa Boudokhane",
+      role: "UI/UX Designer",
+      image: douaa,
+      socials: {
+        linkedin: "#",
+        github: "#",
+        email: "#"
+      }
+    },
+    {
+      name: "Ranim Ammar",
+      role: "Product Manager",
+      image: ranim,
+      socials: {
+        linkedin: "#",
+        github: "#",
+        email: "#"
+      }
+    }
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % testimonials.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <main className="flex-shrink-0">
-      {/* Hero Section with Image Slider */}
-      <div className="position-relative" style={{ height: '600px' }}>
-        <div className="hero-slider">
-          <div className="slide">
-            <Image
-              src={Image1}
-              alt="Career opportunities"
-              fill
-              style={{ objectFit: 'cover' }}
-              priority
-            />
-          </div>
-          <div className="slide">
-            <Image
-              src={Image2}
-              alt="Work environment"
-              fill
-              style={{ objectFit: 'cover' }}
-            />
-          </div>
-          <div className="slide">
-            <Image
-              src={Image3}
-              alt="Office space"
-              fill
-              style={{ objectFit: 'cover' }}
-            />
-          </div>
-          <div className="hero-content position-absolute top-50 start-50 translate-middle text-center text-white z-1">
-            <h1 className="display-3 fw-bold mb-4">Start Your Career in Part-Time</h1>
-            <p className="lead mb-4 fs-4">We are the people who connect dreams & opportunities.</p>
+      {/* Hero Section */}
+      <section className="min-vh-100 d-flex align-items-center position-relative" data-aos="fade-up">
+        <div className="hero-slider" style={{ height: '100vh', width: '100%', position: 'absolute', top: 0, left: 0 }}>
+          <Image
+            src={Image1}
+            alt="Hero Image"
+            fill
+            style={{ objectFit: 'cover' }}
+            priority
+          />
+          <div className="overlay position-absolute w-100 h-100" 
+               style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}></div>
+        </div>
+        <div className="container position-relative" style={{ zIndex: 2 }}>
+          <div className="text-center text-white">
+            <h1 className="display-3 fw-bold mb-4">Find Your Perfect Part-Time Job</h1>
+            <p className="lead fs-4 mb-5">Connect with opportunities that match your schedule and skills</p>
+            <a href="/job" className="btn btn-lg" 
+               style={{ backgroundColor: '#20B2AA', color: 'white', padding: '15px 30px' }}>
+              Browse Jobs
+            </a>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Monthly Visitors Section */}
-      <div className="container-fluid py-5 bg-light">
+      {/* Features Section */}
+      <section className="min-vh-100 d-flex align-items-center py-5" data-aos="fade-up">
         <div className="container">
-          <h2 className="text-center mb-5">Our Growing Community</h2>
-          <div className="row align-items-center">
-            <div className="col-md-6">
-              <div className="visitor-counter text-center p-4 rounded-3 shadow-sm bg-white">
-                <h3 className="display-1 text-primary mb-3">5,234</h3>
-                <p className="lead">Monthly Active Users</p>
-                <div className="progress mb-3" style={{ height: '10px' }}>
-                  <div className="progress-bar bg-primary" style={{ width: '75%' }}></div>
+          <h2 className="text-center display-4 mb-5">Our Features</h2>
+          <div className="row g-4 justify-content-center">
+            <div className="col-md-4" data-aos="fade-up" data-aos-delay="100">
+              <div className="card h-100 border-0 shadow-sm p-4">
+                <div className="card-body text-center">
+                  <i className="bi bi-search display-4 mb-4" style={{ color: '#20B2AA' }}></i>
+                  <h3 className="h4 mb-3">Find Jobs</h3>
+                  <p className="text-muted">Discover perfect part-time opportunities tailored to your skills and schedule.</p>
                 </div>
-                <p className="text-muted">75% increase from last month</p>
               </div>
             </div>
-            <div className="col-md-6">
-              <div className="achievements p-4">
-                <div className="achievement-item mb-4">
-                  <i className="bi bi-people-fill text-primary fs-1"></i>
-                  <h4>Growing Network</h4>
-                  <p>Join thousands of professionals finding their ideal part-time roles</p>
+            <div className="col-md-4" data-aos="fade-up" data-aos-delay="200">
+              <div className="card h-100 border-0 shadow-sm p-4">
+                <div className="card-body text-center">
+                  <i className="bi bi-people display-4 mb-4" style={{ color: '#20B2AA' }}></i>
+                  <h3 className="h4 mb-3">Connect</h3>
+                  <p className="text-muted">Connect directly with employers and build your professional network.</p>
                 </div>
-                <div className="achievement-item">
-                  <i className="bi bi-graph-up-arrow text-primary fs-1"></i>
-                  <h4>Success Stories</h4>
-                  <p>Over 1000+ successful job placements this month</p>
+              </div>
+            </div>
+            <div className="col-md-4" data-aos="fade-up" data-aos-delay="300">
+              <div className="card h-100 border-0 shadow-sm p-4">
+                <div className="card-body text-center">
+                  <i className="bi bi-graph-up display-4 mb-4" style={{ color: '#20B2AA' }}></i>
+                  <h3 className="h4 mb-3">Grow</h3>
+                  <p className="text-muted">Develop your skills and advance your career with flexible opportunities.</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Testimonials Section */}
-      <div className="container py-5">
-        <h2 className="text-center mb-5">What Our Clients Say</h2>
-        <div className="row g-4">
-          {[
-            {
-              name: 'Sarah Johnson',
-              role: 'Web Developer',
-              text: 'Found my dream part-time role through this platform. The process was smooth and efficient.',
-              rating: 5
-            },
-            {
-              name: 'Michael Chen',
-              role: 'UI Designer',
-              text: 'Great platform for finding flexible work arrangements. Highly recommended!',
-              rating: 5
-            },
-            {
-              name: 'Emma Davis',
-              role: 'Marketing Specialist',
-              text: 'The quality of job listings and employers on this platform is outstanding.',
-              rating: 4
-            }
-          ].map((testimonial, index) => (
-            <div key={index} className="col-md-4">
-              <div className="card h-100 border-0 shadow-sm testimonial-card">
-                <div className="card-body">
-                  <div className="mb-3">
-                    {'★'.repeat(testimonial.rating)}
-                    {'☆'.repeat(5 - testimonial.rating)}
-                  </div>
-                  <p className="card-text">{testimonial.text}</p>
-                  <div className="d-flex align-items-center mt-3">
-                    <div className="testimonial-avatar">
-                      {testimonial.name.charAt(0)}
-                    </div>
-                    <div className="ms-3">
-                      <h5 className="mb-0">{testimonial.name}</h5>
-                      <small className="text-muted">{testimonial.role}</small>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Team Members Section */}
-      <div className="container-fluid py-5 bg-light">
+      <section className="min-vh-100 d-flex align-items-center py-5 bg-light" data-aos="fade-up">
         <div className="container">
-          <h2 className="text-center mb-5">Meet Our Team</h2>
+          <h2 className="text-center display-4 mb-5">What People Say</h2>
+          <div className="position-relative">
+            <div className="testimonials-slider">
+              {testimonials.map((testimonial, index) => (
+                <div
+                  key={index}
+                  className={`testimonial-item text-center ${index === currentSlide ? 'active' : ''}`}
+                  style={{
+                    opacity: index === currentSlide ? 1 : 0,
+                    transform: `translateX(${(index - currentSlide) * 100}%)`,
+                    transition: 'all 0.5s ease-in-out'
+                  }}
+                >
+                  <div className="stars mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <i key={i} className="bi bi-star-fill text-warning"></i>
+                    ))}
+                  </div>
+                  <p className="testimonial-text mb-4 px-md-5">{testimonial.text}</p>
+                  <h5 className="mb-1">{testimonial.name}</h5>
+                  <p className="text-muted mb-0">{testimonial.role}</p>
+                </div>
+              ))}
+            </div>
+            <div className="testimonial-dots d-flex justify-content-center gap-2 mt-4">
+              {testimonials.map((_, index) => (
+                <button
+                  key={index}
+                  className={`dot ${index === currentSlide ? 'active' : ''}`}
+                  onClick={() => setCurrentSlide(index)}
+                  aria-label={`Go to slide ${index + 1}`}
+                ></button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Team Section */}
+      <section className="min-vh-100 d-flex align-items-center py-5" data-aos="fade-up">
+        <div className="container">
+          <h2 className="text-center display-4 mb-5">Our Team</h2>
           <div className="row g-4">
-            {[
-              {
-                name: 'John Doe',
-                role: 'CEO & Founder',
-                image: '/assets/team1.jpg'
-              },
-              {
-                name: 'Jane Smith',
-                role: 'Head of Operations',
-                image: '/assets/team2.jpg'
-              },
-              {
-                name: 'David Wilson',
-                role: 'Lead Developer',
-                image: '/assets/team3.jpg'
-              }
-            ].map((member, index) => (
-              <div key={index} className="col-md-4">
-                <div className="card border-0 shadow-sm team-card">
-                  <div className="card-body text-center">
-                    <div className="team-member-image mb-3">
+            {teamMembers.map((member, index) => (
+              <div 
+                key={index} 
+                className="col-lg-4 col-md-6" 
+                data-aos="fade-up" 
+                data-aos-delay={100 * (index + 1)}
+              >
+                <div className="card team-card border-0 shadow-sm h-100">
+                  <div className="card-body text-center p-4">
+                    <div className="team-img-wrapper mb-4">
                       <Image
                         src={member.image}
                         alt={member.name}
-                        width={150}
-                        height={150}
-                        className="rounded-circle"
+                        width={200}
+                        height={200}
+                        className="rounded-circle img-fluid"
+                        style={{ 
+                          objectFit: 'cover',
+                          border: '4px solid #fff',
+                          boxShadow: '0 2px 15px rgba(0, 0, 0, 0.1)'
+                        }}
                       />
                     </div>
-                    <h4>{member.name}</h4>
-                    <p className="text-muted">{member.role}</p>
+                    <h5 className="card-title mb-1">{member.name}</h5>
+                    <p className="text-muted mb-3">{member.role}</p>
                     <div className="social-links">
-                      <a href="#" className="text-primary mx-2"><i className="bi bi-linkedin"></i></a>
-                      <a href="#" className="text-primary mx-2"><i className="bi bi-twitter"></i></a>
-                      <a href="#" className="text-primary mx-2"><i className="bi bi-envelope"></i></a>
+                      <a href={member.socials.linkedin} className="mx-2" style={{ color: '#20B2AA' }}>
+                        <i className="bi bi-linkedin"></i>
+                      </a>
+                      <a href={member.socials.github} className="mx-2" style={{ color: '#20B2AA' }}>
+                        <i className="bi bi-github"></i>
+                      </a>
+                      <a href={member.socials.email} className="mx-2" style={{ color: '#20B2AA' }}>
+                        <i className="bi bi-envelope"></i>
+                      </a>
                     </div>
                   </div>
                 </div>
@@ -170,7 +273,7 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </div>
+      </section>
     </main>
   );
 }
