@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import InstallBootstrap from "./components/installBootstrap";
+import Navigation from './components/Navigation';
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -22,72 +23,18 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html lang="en" className="h-100"><head /><body className={`${geistSans.variable} ${geistMono.variable} antialiased d-flex flex-column h-100`}>
-      <InstallBootstrap />
-      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" />
-      
-      {/* Navbar */}
-      <nav className="navbar navbar-expand-lg">
-        <div className="container">
-          <a className="navbar-brand" href="/">PartTime Hub</a>
-          <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span className="navbar-toggler-icon"></span>
-          </button>
-          <div className="collapse navbar-collapse justify-content-end" id="navbarNav">
-            <ul className="navbar-nav">
-              <li className="nav-item">
-                <a className="nav-link" href="/">Home</a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link" href="/job">Find Jobs</a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link" href="/chat">Messages</a>
-              </li>
-              <li className="nav-item">
-                <a className="btn btn-primary ms-2" href="/login">Login</a>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </nav>
-
-      {children}
-
-      {/* Footer */}
-      <footer className="footer bg-dark text-white py-5">
-        <div className="container">
-          <div className="row">
-            <div className="col-md-4">
-              <h5>Contact Us</h5>
-              <ul className="list-unstyled">
-                <li>Email: contact@parttimehub.com</li>
-                <li>Phone: +123 456 789</li>
-              </ul>
-            </div>
-            <div className="col-md-4">
-              <h5>Quick Links</h5>
-              <ul className="list-unstyled">
-                <li><a href="/job" className="text-white">Find Jobs</a></li>
-                <li><a href="/chat" className="text-white">Messages</a></li>
-                <li><a href="/" className="text-white">About Us</a></li>
-              </ul>
-            </div>
-            <div className="col-md-4">
-              <h5>Follow Us</h5>
-              <div className="social-links">
-                <a href="#" className="text-white me-3"><i className="bi bi-facebook"></i></a>
-                <a href="#" className="text-white me-3"><i className="bi bi-twitter"></i></a>
-                <a href="#" className="text-white"><i className="bi bi-instagram"></i></a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </body></html>
+    <html lang="en">
+      <head>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
+      </head>
+      <body>
+        <Navigation />
+        {children}
+      </body>
+    </html>
   );
 }

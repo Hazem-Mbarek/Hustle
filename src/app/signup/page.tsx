@@ -34,7 +34,20 @@ export default function Signup() {
       const data = await response.json();
 
       if (response.ok) {
-        router.push('/login');
+        const loginResponse = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password
+          })
+        });
+
+        if (loginResponse.ok) {
+          router.push('/profile');
+        } else {
+          router.push('/login');
+        }
       } else {
         setError(data.message || 'Signup failed');
       }

@@ -57,6 +57,17 @@ export async function POST(request: Request) {
       maxAge: 86400 // 24 hours
     });
 
+    // Set profile creation token if coming from signup
+    const isFromSignup = request.headers.get('X-From-Signup') === 'true';
+    if (isFromSignup) {
+      response.cookies.set('profile_creation_token', 'true', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 300 // 5 minutes
+      });
+    }
+
     return response;
 
   } catch (error) {

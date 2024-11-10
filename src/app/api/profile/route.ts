@@ -10,29 +10,43 @@ interface ProfileData {
   id_user: number;
 }
 
-interface User {
-  id_user: number;
-  email: string;
-  first_name: string;
-  last_name: string;
-}
-
 // CREATE (POST)
 export async function POST(request: Request) {
   const pool = initDB();
 
   try {
-    const profileData: ProfileData = await request.json();
+    const { description, image } = await request.json();
+    
+    // Convert base64 image to Buffer if image exists
+    let imageBuffer = null;
+    if (image) {
+      const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
+      imageBuffer = Buffer.from(base64Data, 'base64');
+    }
+
+    // First, get the latest user ID from the users table
+    const [userResult] = await pool.query(
+      'SELECT id_user FROM users ORDER BY id_user DESC LIMIT 1'
+    );
+    
+    const latestUserId = (userResult as any)[0]?.id_user;
+
+    if (!latestUserId) {
+      return NextResponse.json(
+        { message: 'No user found' },
+        { status: 404 }
+      );
+    }
 
     const [result] = await pool.query(
       `INSERT INTO profiles (description, image, average_rating_employee, average_rating_employer, id_user) 
        VALUES (?, ?, ?, ?, ?)`,
       [
-        profileData.description,
-        profileData.image || null,
-        profileData.average_rating_employee || null,
-        profileData.average_rating_employer,
-        profileData.id_user
+        description,
+        imageBuffer,
+        0.00, // Default rating
+        0.00, // Default rating
+        latestUserId
       ]
     );
 
@@ -50,25 +64,33 @@ export async function POST(request: Request) {
 // READ (GET)
 export async function GET(request: Request) {
   const pool = initDB();
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
 
   try {
-    if (id) {
-      // Get specific profile
-      const [rows] = await pool.query('SELECT * FROM profiles WHERE id_profile = ?', [id]);
-      const profiles = rows as any[];
-      
-      if (profiles.length === 0) {
-        return NextResponse.json({ message: 'Profile not found' }, { status: 404 });
-      }
-      
-      return NextResponse.json(profiles[0]);
-    } else {
-      // Get all profiles
-      const [rows] = await pool.query('SELECT * FROM profiles');
-      return NextResponse.json(rows);
+    const [rows] = await pool.query(`
+      SELECT 
+        p.*,
+        u.first_name,
+        u.last_name,
+        u.email 
+      FROM profiles p
+      INNER JOIN users u ON p.id_user = u.id_user
+      ORDER BY p.id_profile DESC
+      LIMIT 1
+    `);
+
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return NextResponse.json({ message: 'No profile found' }, { status: 404 });
     }
+
+    const profile = rows[0] as any;
+    
+    // Convert Buffer to base64 string if image exists
+    if (profile.image) {
+      // Convert Buffer to base64
+      profile.image = Buffer.from(profile.image).toString('base64');
+    }
+
+    return NextResponse.json(profile);
   } catch (error) {
     console.error('Database query failed:', error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
@@ -81,37 +103,33 @@ export async function PATCH(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
+  if (!id) {
+    return NextResponse.json({ message: 'Profile ID is required' }, { status: 400 });
+  }
+
   try {
-    if (!id) {
-      return NextResponse.json({ message: 'Profile ID is required' }, { status: 400 });
+    const { description, image } = await request.json();
+
+    // Handle image data
+    let imageBuffer = null;
+    if (image) {
+      // If image is a base64 string, convert it to buffer
+      if (image.startsWith('data:image')) {
+        const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
+        imageBuffer = Buffer.from(base64Data, 'base64');
+      } else {
+        imageBuffer = Buffer.from(image, 'base64');
+      }
     }
 
-    const updateFields = await request.json();
-    
-    const updates = Object.keys(updateFields)
-      .filter(key => updateFields[key] !== undefined)
-      .map(key => `${key} = ?`);
-    
-    if (updates.length === 0) {
-      return NextResponse.json({ message: 'No fields to update' }, { status: 400 });
-    }
+    const [result] = await pool.query(
+      `UPDATE profiles 
+       SET description = ?, image = ?
+       WHERE id_profile = ?`,
+      [description, imageBuffer, id]
+    );
 
-    const query = `
-      UPDATE profiles 
-      SET ${updates.join(', ')}
-      WHERE id_profile = ?
-    `;
-
-    const values = [
-      ...Object.keys(updateFields)
-        .filter(key => updateFields[key] !== undefined)
-        .map(key => updateFields[key]),
-      id
-    ];
-
-    const [result] = await pool.query(query, values);
-    
-    const affectedRows = (result as OkPacket).affectedRows;
+    const affectedRows = (result as any).affectedRows;
     
     if (affectedRows === 0) {
       return NextResponse.json({ message: 'Profile not found' }, { status: 404 });

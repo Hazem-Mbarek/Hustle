@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
 export default function Login() {
   const router = useRouter();
@@ -89,6 +90,12 @@ export default function Login() {
                   >
                     Login
                   </button>
+                </div>
+
+                <div className="text-center mt-3">
+                  <p className="mb-0">
+                    Don't have an account? <Link href="/signup" className="text-primary">Sign up here</Link>
+                  </p>
                 </div>
               </form>
             </div>
