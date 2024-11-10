@@ -1,6 +1,7 @@
 'use client';
 import './Job.css';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface Job {
   id_job: number;
@@ -12,6 +13,13 @@ interface Job {
   pay: number;
   location: string;
   time: string;
+  id_employer: number;
+}
+
+interface CurrentUser {
+  id: number;
+  email: string;
+  name: string;
 }
 
 export default function Job() {
@@ -19,6 +27,8 @@ export default function Job() {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [jobsPerPage] = useState(6); // Show 6 jobs per page (2 rows of 3)
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -33,6 +43,25 @@ export default function Job() {
     };
 
     fetchJobs();
+  }, []);
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await fetch('/api/auth/user');
+        if (response.ok) {
+          const userData = await response.json();
+          console.log('Current user data:', userData);
+          setCurrentUser(userData);
+        } else {
+          console.log('Response not OK:', await response.text());
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+
+    fetchCurrentUser();
   }, []);
 
   // Get current jobs
@@ -54,6 +83,45 @@ export default function Job() {
 
   const handleShowDetails = (job: Job) => {
     setSelectedJob(job);
+  };
+
+  const handleApply = async (job: Job) => {
+    const requestData = {
+      id_profile_sender: currentUser?.id,
+      id_job: job.id_job,
+      id_profile_receiver: job.id_employer,
+      status: 'pending',
+      bid: job.pay
+    };
+
+    console.log('Request JSON:', requestData);
+
+    if (!currentUser) {
+      router.push('/login');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'credentials': 'include'
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      if (response.ok) {
+        alert('Application submitted successfully!');
+      } else {
+        const errorData = await response.json();
+        console.error('Server response:', errorData);
+        alert(errorData.message || 'Failed to submit application');
+      }
+    } catch (error) {
+      console.error('Error submitting application:', error);
+      alert('Error submitting application. Please try again.');
+    }
   };
 
   return (
@@ -297,6 +365,7 @@ export default function Job() {
               <button 
                 type="button" 
                 className="btn btn-success"
+                onClick={() => selectedJob && handleApply(selectedJob)}
                 style={{ backgroundColor: '#17a589', borderColor: '#17a589' }}
               >
                 Apply Now
