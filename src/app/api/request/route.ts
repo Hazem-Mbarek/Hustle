@@ -12,6 +12,18 @@ interface RequestData {
   id_profile_receiver: number;
 }
 
+// Add this function after the interface declarations
+async function checkExistingRequest(pool: any, userId: number, jobId: number) {
+  const [rows] = await pool.query(
+    `SELECT * FROM requests 
+     WHERE id_profile_sender = ? 
+     AND id_job = ? 
+     AND status IN ('pending', 'accepted')`,
+    [userId, jobId]
+  );
+  return (rows as any[]).length > 0;
+}
+
 // CREATE (POST)
 export async function POST(request: Request) {
   const pool = initDB();
@@ -24,6 +36,19 @@ export async function POST(request: Request) {
 
   try {
     const requestData: RequestData = await request.json();
+    
+    // Check for existing request
+    const hasExistingRequest = await checkExistingRequest(
+      pool, 
+      requestData.id_profile_sender, 
+      requestData.id_job
+    );
+
+    if (hasExistingRequest) {
+      return NextResponse.json({ 
+        message: 'You already have a pending or accepted request for this job' 
+      }, { status: 409 });
+    }
 
     const [result] = await pool.query(
       `INSERT INTO requests (

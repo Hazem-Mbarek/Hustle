@@ -29,6 +29,7 @@ export default function Job() {
   const [jobsPerPage] = useState(6); // Show 6 jobs per page (2 rows of 3)
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const router = useRouter();
+  const [bidAmount, setBidAmount] = useState<number>(0);
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -86,11 +87,6 @@ export default function Job() {
   };
 
   const handleApply = async (job: Job) => {
-    /*if (!currentUser) {
-      router.push('/login');
-      return;
-    }*/
-
     try {
       const jobResponse = await fetch(`/api/job?id=${job.id_job}`);
       if (!jobResponse.ok) throw new Error('Failed to fetch job details');
@@ -99,9 +95,9 @@ export default function Job() {
       const requestData = {
         id_profile_sender: 2,
         id_job: job.id_job,
-        id_profile_receiver: jobData.profile_id,
+        id_profile_receiver: jobData.id_employer,
         status: 'pending',
-        bid: 33
+        bid: bidAmount
       };
 
       console.log('Job object:', job);
@@ -359,7 +355,20 @@ export default function Job() {
                 </div>
               )}
             </div>
-            <div className="modal-footer">
+            <div className="modal-footer d-flex align-items-center">
+              <div className="input-group me-2" style={{ maxWidth: '200px' }}>
+                <span className="input-group-text">$</span>
+                <input
+                  type="number"
+                  className="form-control"
+                  placeholder="Your bid"
+                  value={bidAmount}
+                  onChange={(e) => setBidAmount(Number(e.target.value))}
+                  min="0"
+                  step="0.01"
+                />
+                <span className="input-group-text">/hr</span>
+              </div>
               <button
                 type="button"
                 className="btn btn-secondary"
