@@ -57,6 +57,7 @@ const ViewProfile: React.FC = () => {
   const [pendingRequests, setPendingRequests] = useState<Request[]>([]);
   const [pendingCurrentPage, setPendingCurrentPage] = useState(1);
   const [activeView, setActiveView] = useState('posted');
+  const [editingRequest, setEditingRequest] = useState<Request | null>(null);
 
   useEffect(() => {
     fetchProfile();
@@ -98,7 +99,7 @@ const ViewProfile: React.FC = () => {
 
   const fetchPendingRequests = async (profileId: number) => {
     try {
-      const response = await fetch(`/api/request?profile_id=${profileId}&status=pending`);
+      const response = await fetch(`/api/request?pending=true`);
       if (response.ok) {
         const data = await response.json();
         setPendingRequests(data);
@@ -248,6 +249,25 @@ const ViewProfile: React.FC = () => {
     }
   };
 
+  // Add these functions near your other state management functions
+  const deleteRequest = async (requestId: number) => {
+    try {
+      const response = await fetch(`/api/request?id=${requestId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // Remove the deleted request from the state
+        setPendingRequests(pendingRequests.filter(request => request.id_request !== requestId));
+      } else {
+        throw new Error('Failed to delete request');
+      }
+    } catch (error) {
+      console.error('Error deleting request:', error);
+      alert('Failed to delete request. Please try again.');
+    }
+  };
+
   if (!profile) return <div>Loading...</div>;
 
   return (
@@ -340,7 +360,7 @@ const ViewProfile: React.FC = () => {
           <div className="card shadow-sm mt-4">
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center mb-4">
-                <h4 className="card-title mb-0">My Jobs</h4>
+                <h4 className="card-title mb-0">History</h4>
                 <select 
                   className="form-select w-auto"
                   value={activeView}
@@ -555,7 +575,7 @@ const ViewProfile: React.FC = () => {
                               <div className="text-muted mt-2 mb-2">
                                 {new Date(request.time).toLocaleString()}
                               </div>
-                              <div className="d-flex justify-content-end">
+                              <div className="d-flex justify-content-end gap-2">
                                 <button 
                                   className="btn btn-outline-primary btn-sm"
                                   style={{
@@ -567,7 +587,35 @@ const ViewProfile: React.FC = () => {
                                   data-bs-target="#requestDetailsModal"
                                   onClick={() => setSelectedRequest(request)}
                                 >
-                                  View Details
+                                  View
+                                </button>
+                                <button 
+                                  className="btn btn-outline-warning btn-sm"
+                                  style={{
+                                    borderRadius: '20px',
+                                    paddingLeft: '20px',
+                                    paddingRight: '20px'
+                                  }}
+                                  data-bs-toggle="modal"
+                                  data-bs-target="#editRequestModal"
+                                  onClick={() => setEditingRequest(request)}
+                                >
+                                  Update
+                                </button>
+                                <button 
+                                  className="btn btn-outline-danger btn-sm"
+                                  style={{
+                                    borderRadius: '20px',
+                                    paddingLeft: '20px',
+                                    paddingRight: '20px'
+                                  }}
+                                  onClick={() => {
+                                    if (window.confirm('Are you sure you want to delete this request?')) {
+                                      deleteRequest(request.id_request);
+                                    }
+                                  }}
+                                >
+                                  Delete
                                 </button>
                               </div>
                             </div>
@@ -791,6 +839,99 @@ const ViewProfile: React.FC = () => {
                       name="location"
                       defaultValue={editingJob.location}
                       required
+                    />
+                  </div>
+                  <div className="d-flex justify-content-end">
+                    <button
+                      type="button"
+                      className="btn btn-secondary me-2"
+                      data-bs-dismiss="modal"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                    >
+                      Save Changes
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Add Edit Request Modal */}
+      <div
+        className="modal fade"
+        id="editRequestModal"
+        tabIndex={-1}
+        aria-labelledby="editRequestModalLabel"
+        aria-hidden="true"
+      >
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="editRequestModalLabel">
+                Edit Request
+              </h5>
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div className="modal-body">
+              {editingRequest && (
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  const updatedData = {
+                    bid: Number(formData.get('bid')),
+                  };
+                  
+                  try {
+                    const response = await fetch(`/api/request?id=${editingRequest.id_request}`, {
+                      method: 'PATCH',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify(updatedData),
+                    });
+
+                    if (response.ok) {
+                      // Update the request in the state
+                      setPendingRequests(pendingRequests.map(request => 
+                        request.id_request === editingRequest.id_request 
+                          ? { ...request, ...updatedData }
+                          : request
+                      ));
+                      
+                      // Close the modal
+                      const closeButton = document.querySelector('[data-bs-dismiss="modal"]') as HTMLElement;
+                      closeButton?.click();
+                      setEditingRequest(null);
+                    } else {
+                      throw new Error('Failed to update request');
+                    }
+                  } catch (error) {
+                    console.error('Error updating request:', error);
+                    alert('Failed to update request. Please try again.');
+                  }
+                }}>
+                  <div className="mb-3">
+                    <label className="form-label">Your Bid ($)</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      name="bid"
+                      defaultValue={editingRequest.bid}
+                      required
+                      min="0"
+                      step="0.01"
                     />
                   </div>
                   <div className="d-flex justify-content-end">
