@@ -28,23 +28,9 @@ export async function POST(request: Request) {
   }
 
   try {
-    // First, get the profile ID from auth profile
-    const profileResponse = await fetch('http://localhost:3000/api/auth/profile', {
-      headers: {
-        'Cookie': `auth_token=${authToken.value}`
-      }
-    });
-    
-    if (!profileResponse.ok) {
-      return NextResponse.json({ message: 'Profile not found' }, { status: 404 });
-    }
-    
-    const profileData = await profileResponse.json();
-    console.log('Profile data for job creation:', profileData);
-    
-    if (!profileData.profileId) {
-      return NextResponse.json({ message: 'Profile ID not found' }, { status: 404 });
-    }
+    // Decode the JWT token to get user information
+    const decoded = jwt.verify(authToken.value, process.env.JWT_SECRET || 'your-secret-key') as any;
+    const userId = decoded.userId;
 
     const jobData = await request.json();
 
@@ -56,7 +42,7 @@ export async function POST(request: Request) {
       [
         jobData.title,
         jobData.description,
-        profileData.profileId, // Use profileId from auth profile
+        userId, // Use the ID from the token instead of the submitted data
         jobData.category,
         jobData.state,
         jobData.num_workers,
@@ -82,9 +68,6 @@ export async function GET(request: Request) {
   const pool = initDB();
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
-  const profile_id = searchParams.get('profile_id');
-
-  console.log('GET /api/job - profile_id:', profile_id); // Debug log
 
   try {
     if (id) {
@@ -102,15 +85,6 @@ export async function GET(request: Request) {
       }
       
       return NextResponse.json(jobs[0]);
-    } else if (profile_id) {
-      // Get jobs for specific profile
-      const [rows] = await pool.query(`
-        SELECT j.*, p.id_profile as id_employer 
-        FROM Jobs j
-        JOIN Profiles p ON j.profile_id = p.id_profile
-        WHERE j.profile_id = ?
-      `, [profile_id]);
-      return NextResponse.json(rows);
     } else {
       // Get all jobs with employer information
       const [rows] = await pool.query(`
