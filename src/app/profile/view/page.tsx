@@ -78,7 +78,8 @@ const ViewProfile: React.FC = () => {
   const [hoveredRating, setHoveredRating] = useState<number>(0);
   const [existingRatingId, setExistingRatingId] = useState<number | null>(null);
   const [jobEmployees, setJobEmployees] = useState<{ [key: number]: Request[] }>({});
-  const [employeeRatings, setEmployeeRatings] = useState<{ [key: number]: number }>({});
+  const [employeeRatings, setEmployeeRatings] = useState<{ [key: number]: number | null }>({});
+  const [selectedEmployee, setSelectedEmployee] = useState<Request | null>(null);
 
   useEffect(() => {
     fetchProfile();
@@ -750,7 +751,7 @@ const ViewProfile: React.FC = () => {
                                             {employeeRatings[employee.id_profile_sender] ? (
                                               <>
                                                 <i className="bi bi-star-fill"></i>
-                                                <span className="ms-1">{employeeRatings[employee.id_profile_sender].toFixed(1)}</span>
+                                                <span className="ms-1">{employeeRatings[employee.id_profile_sender]?.toFixed(1)}</span>
                                               </>
                                             ) : (
                                               <span className="text-muted">No ratings</span>
@@ -1123,7 +1124,7 @@ const ViewProfile: React.FC = () => {
                             {employeeRatings[employee.id_profile_sender] ? (
                               <>
                                 <i className="bi bi-star-fill"></i>
-                                <span className="ms-1">{employeeRatings[employee.id_profile_sender].toFixed(1)}</span>
+                                <span className="ms-1">{employeeRatings[employee.id_profile_sender]?.toFixed(1)}</span>
                               </>
                             ) : (
                               <span className="text-muted">No ratings</span>
@@ -1131,9 +1132,22 @@ const ViewProfile: React.FC = () => {
                           </div>
                         </div>
                       </div>
-                      <span className="badge bg-primary rounded-pill">
-                        Bid: ${employee.bid}
-                      </span>
+                      <div>
+                        <span className="badge bg-primary rounded-pill me-2">
+                          Bid: ${employee.bid}
+                        </span>
+                        <button
+                          className="btn btn-outline-warning btn-sm"
+                          onClick={() => {
+                            setSelectedEmployee(employee);
+                            setRatingValue(employeeRatings[employee.id_profile_sender] || 0);
+                          }}
+                          data-bs-toggle="modal"
+                          data-bs-target="#rateEmployeeModal"
+                        >
+                          {employeeRatings[employee.id_profile_sender] ? 'Update Rating' : 'Rate Employee'}
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1378,6 +1392,125 @@ const ViewProfile: React.FC = () => {
                     </button>
                   </div>
                 </form>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Add Rate Employee Modal */}
+      <div
+        className="modal fade"
+        id="rateEmployeeModal"
+        tabIndex={-1}
+        aria-labelledby="rateEmployeeModalLabel"
+        aria-hidden="true"
+      >
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="rateEmployeeModalLabel">
+                {employeeRatings[selectedEmployee?.id_profile_sender ?? 0] !== null 
+                  ? 'Update Employee Rating' 
+                  : 'Rate Employee'}
+              </h5>
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div className="modal-body">
+              {selectedEmployee && (
+                <div className="rating-container">
+                  <div className="stars-container mb-3">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <span
+                        key={star}
+                        onClick={() => setRatingValue(star)}
+                        onMouseEnter={() => setHoveredRating(star)}
+                        onMouseLeave={() => setHoveredRating(0)}
+                        style={{ cursor: 'pointer', fontSize: '24px' }}
+                        className={`star ${
+                          star <= (hoveredRating || ratingValue) ? 'text-warning' : 'text-muted'
+                        }`}
+                      >
+                        ★
+                      </span>
+                    ))}
+                  </div>
+                  
+                  <div className="d-flex gap-2 justify-content-end">
+                    {employeeRatings[selectedEmployee.id_profile_sender] !== null && (
+                      <button
+                        className="btn btn-danger"
+                        onClick={async () => {
+                          if (confirm('Are you sure you want to delete this rating?')) {
+                            try {
+                              const response = await fetch(`/api/rating?id_subject=${selectedEmployee.id_profile_sender}&id_job=${selectedEmployee.id_job}`, {
+                                method: 'DELETE',
+                              });
+                              if (response.ok) {
+                                setEmployeeRatings(prev => ({
+                                  ...prev,
+                                  [selectedEmployee.id_profile_sender]: null
+                                }));
+                                const closeButton = document.querySelector('[data-bs-dismiss="modal"]') as HTMLElement;
+                                closeButton?.click();
+                              }
+                            } catch (error) {
+                              console.error('Error deleting rating:', error);
+                            }
+                          }
+                        }}
+                      >
+                        Delete Rating
+                      </button>
+                    )}
+                    <button
+                      className="btn btn-primary"
+                      onClick={async () => {
+                        if (!ratingValue) return;
+                        
+                        const method = employeeRatings[selectedEmployee.id_profile_sender] !== null 
+                          ? 'PATCH' 
+                          : 'POST';
+                        
+                        try {
+                          const response = await fetch('/api/rating', {
+                            method,
+                            headers: {
+                              'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                              id_user: currentUserId,
+                              id_subject: selectedEmployee.id_profile_sender,
+                              id_job: selectedEmployee.id_job,
+                              value: ratingValue
+                            }),
+                          });
+                          
+                          if (response.ok) {
+                            setEmployeeRatings(prev => ({
+                              ...prev,
+                              [selectedEmployee.id_profile_sender]: ratingValue
+                            }));
+                            const closeButton = document.querySelector('[data-bs-dismiss="modal"]') as HTMLElement;
+                            closeButton?.click();
+                          }
+                        } catch (error) {
+                          console.error('Error updating rating:', error);
+                        }
+                      }}
+                      disabled={!ratingValue}
+                    >
+                      {employeeRatings[selectedEmployee.id_profile_sender] !== null 
+                        ? 'Update Rating' 
+                        : 'Submit Rating'}
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           </div>
