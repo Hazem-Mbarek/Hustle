@@ -31,16 +31,14 @@ interface Request {
   id_job: number;
   status: string;
   bid: number;
-  job: {
-    title: string;
-    description: string;
-    category: string;
-    state: string;
-    num_workers: number;
-    pay: number;
-    location: string;
-    time: string;
-  }
+  title: string;
+  description: string;
+  category: string;
+  state: string;
+  num_workers: number;
+  pay: number;
+  location: string;
+  time: string;
 }
 
 const ViewProfile: React.FC = () => {
@@ -425,14 +423,14 @@ const ViewProfile: React.FC = () => {
                 <div className="card-body">
                   <h4 className="card-title mb-4">My Accepted Jobs</h4>
                   
-                  {jobs.length === 0 ? (
+                  {acceptedRequests.length === 0 ? (
                     <p className="text-muted">No accepted jobs yet.</p>
                   ) : (
                     <>
                       <div className="list-group">
-                        {currentAcceptedJobs.map((job) => (
+                        {acceptedRequests.map((request) => (
                           <div 
-                            key={job.id_job} 
+                            key={request.id_request} 
                             className="list-group-item border-0 mb-3 rounded-4"
                             style={{ 
                               backgroundColor: '#f8f9fa',
@@ -441,25 +439,25 @@ const ViewProfile: React.FC = () => {
                           >
                             <div className="d-flex flex-column">
                               <h5 className="mb-2">
-                                <span style={{ color: '#0066FF' }}>{job.title}</span>
+                                <span style={{ color: '#0066FF' }}>{request.title}</span>
                               </h5>
-                              <p className="mb-3">{job.description}</p>
+                              <p className="mb-3">{request.description}</p>
                               <div className="d-flex align-items-center gap-3">
                                 <span>
                                   <span className="me-1">📍</span>
-                                  {job.location}
+                                  {request.location}
                                 </span>
                                 <span>
                                   <span className="me-1">💰</span>
-                                  ${job.pay}
+                                  Your Bid: ${request.bid}
                                 </span>
                                 <span>
-                                  <span className="me-1">👥</span>
-                                  {job.num_workers} workers needed
+                                  <span className="me-1">💼</span>
+                                  Status: {request.status}
                                 </span>
                               </div>
                               <div className="text-muted mt-2 mb-2">
-                                {new Date(job.time).toLocaleString()}
+                                {new Date(request.time).toLocaleString()}
                               </div>
                               <div className="d-flex justify-content-end">
                                 <button 
@@ -471,9 +469,9 @@ const ViewProfile: React.FC = () => {
                                   }}
                                   data-bs-toggle="modal"
                                   data-bs-target="#requestDetailsModal"
-                                  onClick={() => setSelectedJob(job)}
+                                  onClick={() => setSelectedRequest(request)}
                                 >
-                                  View
+                                  View Details
                                 </button>
                               </div>
                             </div>
@@ -483,7 +481,7 @@ const ViewProfile: React.FC = () => {
                       <Pagination 
                         currentPage={acceptedCurrentPage}
                         setCurrentPage={setAcceptedCurrentPage}
-                        totalItems={jobs.length}
+                        totalItems={acceptedRequests.length}
                       />
                     </>
                   )}
@@ -504,7 +502,7 @@ const ViewProfile: React.FC = () => {
               <div className="modal-content">
                 <div className="modal-header">
                   <h5 className="modal-title" id="requestDetailsModalLabel">
-                    {selectedJob?.title}
+                    {selectedRequest?.title}
                   </h5>
                   <button
                     type="button"
@@ -514,13 +512,15 @@ const ViewProfile: React.FC = () => {
                   ></button>
                 </div>
                 <div className="modal-body">
-                  <p>{selectedJob?.description}</p>
+                  <p>{selectedRequest?.description}</p>
                   <div className="d-flex flex-column gap-2">
-                    <div>Category: {selectedJob?.category}</div>
-                    <div>State: {selectedJob?.state}</div>
-                    <div>Location: {selectedJob?.location}</div>
-                    <div>Pay: ${selectedJob?.pay}/hr</div>
-                    <div>Workers Needed: {selectedJob?.num_workers}</div>
+                    <div>Category: {selectedRequest?.category}</div>
+                    <div>State: {selectedRequest?.state}</div>
+                    <div>Location: {selectedRequest?.location}</div>
+                    <div>Original Pay: ${selectedRequest?.pay}/hr</div>
+                    <div>Your Bid: ${selectedRequest?.bid}</div>
+                    <div>Workers Needed: {selectedRequest?.num_workers}</div>
+                    <div>Status: {selectedRequest?.status}</div>
                   </div>
                 </div>
                 <div className="modal-footer">

@@ -94,40 +94,41 @@ export async function GET(request: Request) {
         return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
       }
 
-      // Decode token to get user ID
-      const decoded = jwt.verify(authToken.value, process.env.JWT_SECRET || 'your-secret-key') as any;
-      const userId = decoded.userId;
+      try {
+        // Decode token to get user ID
+        const decoded = jwt.verify(authToken.value, process.env.JWT_SECRET || 'your-secret-key') as any;
+        const userId = decoded.userId;
 
-      // Get profile ID for the user
-      const [profileRows] = await pool.query(
-        'SELECT id_profile FROM profiles WHERE id_user = ?',
-        [userId]
-      );
-      const profiles = profileRows as any[];
+        // Get profile ID for the user
+        const [profileRows] = await pool.query(
+          'SELECT id_profile FROM profiles WHERE id_user = ?',
+          [userId]
+        );
+        const profiles = profileRows as any[];
 
-      if (profiles.length === 0) {
-        return NextResponse.json({ message: 'Profile not found' }, { status: 404 });
+        if (profiles.length === 0) {
+          return NextResponse.json({ message: 'Profile not found' }, { status: 404 });
+        }
+
+        const profileId = profiles[0].id_profile;
+
+        // Get pending requests with job details
+        const [rows] = await pool.query(`
+          SELECT r.*, j.title, j.description, j.category, j.state, 
+                 j.num_workers, j.pay, j.location, j.time
+          FROM requests r
+          JOIN jobs j ON r.id_job = j.id_job
+          WHERE r.id_profile_sender = ?
+          AND r.status = 'pending'
+          ORDER BY r.id_request DESC`,
+          [profileId]
+        );
+
+        return NextResponse.json(rows);
+      } catch (error) {
+        console.error('Database query failed:', error);
+        return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
       }
-
-      const profileId = profiles[0].id_profile;
-
-      // Get pending requests where user is the receiver
-      const [rows] = await pool.query(`
-        SELECT 
-          id_request,
-          id_profile_sender,
-          id_job,
-          status,
-          bid,
-          id_profile_receiver
-        FROM requests r
-        WHERE r.id_profile_receiver = ?
-        AND r.status = 'pending'
-        ORDER BY r.id_request DESC`,
-        [profileId]
-      );
-
-      return NextResponse.json(rows);
     }
 
     // If status=accepted, get accepted requests for logged in user
@@ -156,7 +157,8 @@ export async function GET(request: Request) {
 
         // Get accepted requests with job details
         const [rows] = await pool.query(`
-          SELECT r.*, j.*
+          SELECT r.*, j.title, j.description, j.category, j.state, 
+                 j.num_workers, j.pay, j.location, j.time
           FROM requests r
           JOIN jobs j ON r.id_job = j.id_job
           WHERE r.id_profile_sender = ?
