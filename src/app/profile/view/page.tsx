@@ -303,11 +303,16 @@ const ViewProfile: React.FC = () => {
   };
 
   const checkExistingRating = async (jobId: number, userId: number, subjectId: number) => {
-    const response = await fetch(
-      `/api/rating?check_id_job=${jobId}&check_id_user=${userId}&check_id_subject=${subjectId}`
-    );
-    const data = await response.json();
-    return data.exists;
+    try {
+      const response = await fetch(
+        `/api/rating?check_id_job=${jobId}&check_id_user=${userId}&check_id_subject=${subjectId}`
+      );
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error checking existing rating:', error);
+      return null;
+    }
   };
 
   const checkRating = async () => {
@@ -540,23 +545,20 @@ const ViewProfile: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         
-        // Fetch all ratings in parallel
+        // Check existing ratings for each employee
         const ratingPromises = data.map(async (employee: Request) => {
-          try {
-            const ratingResponse = await fetch(`/api/rating?id_subject=${employee.id_profile_sender}`);
-            const ratingData = await ratingResponse.json();
-            // Changed this line to properly handle null ratings
-            return { 
-              id: employee.id_profile_sender, 
-              rating: ratingData.exists ? ratingData.rating : null 
-            };
-          } catch (error) {
-            return { id: employee.id_profile_sender, rating: null };
-          }
+          const ratingCheck = await checkExistingRating(
+            jobId,
+            currentUserId,
+            employee.id_profile_sender
+          );
+          return { 
+            id: employee.id_profile_sender, 
+            rating: ratingCheck.exists ? ratingCheck.rating.value : null 
+          };
         });
 
         const ratings = await Promise.all(ratingPromises);
-        // Changed this to properly preserve null values
         const ratingMap = Object.fromEntries(
           ratings.map(({ id, rating }) => [id, rating])
         );
@@ -751,7 +753,9 @@ const ViewProfile: React.FC = () => {
                                             {employeeRatings[employee.id_profile_sender] ? (
                                               <>
                                                 <i className="bi bi-star-fill"></i>
-                                                <span className="ms-1">{employeeRatings[employee.id_profile_sender]?.toFixed(1)}</span>
+                                                <span className="ms-1">
+                                                  {Number(employeeRatings[employee.id_profile_sender]).toFixed(1)}
+                                                </span>
                                               </>
                                             ) : (
                                               <span className="text-muted">No ratings</span>
@@ -1124,7 +1128,9 @@ const ViewProfile: React.FC = () => {
                             {employeeRatings[employee.id_profile_sender] ? (
                               <>
                                 <i className="bi bi-star-fill"></i>
-                                <span className="ms-1">{employeeRatings[employee.id_profile_sender]?.toFixed(1)}</span>
+                                <span className="ms-1">
+                                  {Number(employeeRatings[employee.id_profile_sender]).toFixed(1)}
+                                </span>
                               </>
                             ) : (
                               <span className="text-muted">No ratings</span>
