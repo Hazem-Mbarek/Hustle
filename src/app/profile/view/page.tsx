@@ -54,6 +54,9 @@ const ViewProfile: React.FC = () => {
   const [acceptedCurrentPage, setAcceptedCurrentPage] = useState(1);
   const jobsPerPage = 5;
   const [editingJob, setEditingJob] = useState<Job | null>(null);
+  const [pendingRequests, setPendingRequests] = useState<Request[]>([]);
+  const [pendingCurrentPage, setPendingCurrentPage] = useState(1);
+  const [activeView, setActiveView] = useState('posted');
 
   useEffect(() => {
     fetchProfile();
@@ -93,6 +96,18 @@ const ViewProfile: React.FC = () => {
     }
   };
 
+  const fetchPendingRequests = async (profileId: number) => {
+    try {
+      const response = await fetch(`/api/request?profile_id=${profileId}&status=pending`);
+      if (response.ok) {
+        const data = await response.json();
+        setPendingRequests(data);
+      }
+    } catch (error) {
+      console.error('Failed to load pending requests:', error);
+    }
+  };
+
   const fetchProfile = async () => {
     try {
       // First get the profile ID from the auth endpoint
@@ -111,6 +126,7 @@ const ViewProfile: React.FC = () => {
         await fetchJobs(profileId);
         // Fetch accepted requests after getting profile
         await fetchAcceptedRequests(profileId);
+        await fetchPendingRequests(profileId);
       }
     } catch (error) {
       setError('Failed to load profile');
@@ -153,6 +169,11 @@ const ViewProfile: React.FC = () => {
   const acceptedIndexOfLastJob = acceptedCurrentPage * jobsPerPage;
   const acceptedIndexOfFirstJob = acceptedIndexOfLastJob - jobsPerPage;
   const currentAcceptedJobs = jobs.slice(acceptedIndexOfFirstJob, acceptedIndexOfLastJob);
+
+  // Calculate pagination indexes for pending requests
+  const pendingIndexOfLastRequest = pendingCurrentPage * jobsPerPage;
+  const pendingIndexOfFirstRequest = pendingIndexOfLastRequest - jobsPerPage;
+  const currentPendingRequests = pendingRequests.slice(pendingIndexOfFirstRequest, pendingIndexOfLastRequest);
 
   // Pagination component
   const Pagination = ({ currentPage, setCurrentPage, totalItems }: { 
@@ -316,13 +337,24 @@ const ViewProfile: React.FC = () => {
             </div>
           </div>
 
-          <div className="row mt-4">
-            {/* My Posted Jobs */}
-            <div className="col-md-6">
-              <div className="card border-0">
-                <div className="card-body">
-                  <h4 className="card-title mb-4">My Posted Jobs</h4>
-                  
+          <div className="card shadow-sm mt-4">
+            <div className="card-body">
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <h4 className="card-title mb-0">My Jobs</h4>
+                <select 
+                  className="form-select w-auto"
+                  value={activeView}
+                  onChange={(e) => setActiveView(e.target.value)}
+                >
+                  <option value="posted">Posted Jobs</option>
+                  <option value="accepted">Accepted Jobs</option>
+                  <option value="pending">Pending Requests</option>
+                </select>
+              </div>
+
+              {/* Posted Jobs View */}
+              {activeView === 'posted' && (
+                <>
                   {jobs.length === 0 ? (
                     <p className="text-muted">No jobs posted yet.</p>
                   ) : (
@@ -413,16 +445,12 @@ const ViewProfile: React.FC = () => {
                       />
                     </>
                   )}
-                </div>
-              </div>
-            </div>
+                </>
+              )}
 
-            {/* My Accepted Jobs */}
-            <div className="col-md-6">
-              <div className="card border-0">
-                <div className="card-body">
-                  <h4 className="card-title mb-4">My Accepted Jobs</h4>
-                  
+              {/* Accepted Jobs View */}
+              {activeView === 'accepted' && (
+                <>
                   {acceptedRequests.length === 0 ? (
                     <p className="text-muted">No accepted jobs yet.</p>
                   ) : (
@@ -485,54 +513,122 @@ const ViewProfile: React.FC = () => {
                       />
                     </>
                   )}
-                </div>
-              </div>
+                </>
+              )}
+
+              {/* Pending Requests View */}
+              {activeView === 'pending' && (
+                <>
+                  {pendingRequests.length === 0 ? (
+                    <p className="text-muted">No pending requests.</p>
+                  ) : (
+                    <>
+                      <div className="list-group">
+                        {currentPendingRequests.map((request) => (
+                          <div 
+                            key={request.id_request} 
+                            className="list-group-item border-0 mb-3 rounded-4"
+                            style={{ 
+                              backgroundColor: '#f8f9fa',
+                              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                            }}
+                          >
+                            <div className="d-flex flex-column">
+                              <h5 className="mb-2">
+                                <span style={{ color: '#0066FF' }}>{request.title}</span>
+                              </h5>
+                              <p className="mb-3">{request.description}</p>
+                              <div className="d-flex align-items-center gap-3">
+                                <span>
+                                  <span className="me-1">📍</span>
+                                  {request.location}
+                                </span>
+                                <span>
+                                  <span className="me-1">💰</span>
+                                  Your Bid: ${request.bid}
+                                </span>
+                                <span>
+                                  <span className="me-1">💼</span>
+                                  Status: {request.status}
+                                </span>
+                              </div>
+                              <div className="text-muted mt-2 mb-2">
+                                {new Date(request.time).toLocaleString()}
+                              </div>
+                              <div className="d-flex justify-content-end">
+                                <button 
+                                  className="btn btn-outline-primary btn-sm"
+                                  style={{
+                                    borderRadius: '20px',
+                                    paddingLeft: '20px',
+                                    paddingRight: '20px'
+                                  }}
+                                  data-bs-toggle="modal"
+                                  data-bs-target="#requestDetailsModal"
+                                  onClick={() => setSelectedRequest(request)}
+                                >
+                                  View Details
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <Pagination 
+                        currentPage={pendingCurrentPage}
+                        setCurrentPage={setPendingCurrentPage}
+                        totalItems={pendingRequests.length}
+                      />
+                    </>
+                  )}
+                </>
+              )}
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Request Details Modal */}
-          <div
-            className="modal fade"
-            id="requestDetailsModal"
-            tabIndex={-1}
-            aria-labelledby="requestDetailsModalLabel"
-            aria-hidden="true"
-          >
-            <div className="modal-dialog">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title" id="requestDetailsModalLabel">
-                    {selectedRequest?.title}
-                  </h5>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    data-bs-dismiss="modal"
-                    aria-label="Close"
-                  ></button>
-                </div>
-                <div className="modal-body">
-                  <p>{selectedRequest?.description}</p>
-                  <div className="d-flex flex-column gap-2">
-                    <div>Category: {selectedRequest?.category}</div>
-                    <div>State: {selectedRequest?.state}</div>
-                    <div>Location: {selectedRequest?.location}</div>
-                    <div>Original Pay: ${selectedRequest?.pay}/hr</div>
-                    <div>Your Bid: ${selectedRequest?.bid}</div>
-                    <div>Workers Needed: {selectedRequest?.num_workers}</div>
-                    <div>Status: {selectedRequest?.status}</div>
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    data-bs-dismiss="modal"
-                  >
-                    Close
-                  </button>
-                </div>
+      {/* Request Details Modal */}
+      <div
+        className="modal fade"
+        id="requestDetailsModal"
+        tabIndex={-1}
+        aria-labelledby="requestDetailsModalLabel"
+        aria-hidden="true"
+      >
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="requestDetailsModalLabel">
+                {selectedRequest?.title}
+              </h5>
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div className="modal-body">
+              <p>{selectedRequest?.description}</p>
+              <div className="d-flex flex-column gap-2">
+                <div>Category: {selectedRequest?.category}</div>
+                <div>State: {selectedRequest?.state}</div>
+                <div>Location: {selectedRequest?.location}</div>
+                <div>Original Pay: ${selectedRequest?.pay}/hr</div>
+                <div>Your Bid: ${selectedRequest?.bid}</div>
+                <div>Workers Needed: {selectedRequest?.num_workers}</div>
+                <div>Status: {selectedRequest?.status}</div>
               </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
