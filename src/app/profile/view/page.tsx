@@ -545,7 +545,6 @@ const ViewProfile: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         
-        // Check existing ratings for each employee
         const ratingPromises = data.map(async (employee: Request) => {
           const ratingCheck = await checkExistingRating(
             jobId,
@@ -554,7 +553,8 @@ const ViewProfile: React.FC = () => {
           );
           return { 
             id: employee.id_profile_sender, 
-            rating: ratingCheck.exists ? ratingCheck.rating.value : null 
+            rating: ratingCheck.exists ? ratingCheck.rating.value : null,
+            ratingId: ratingCheck.exists ? ratingCheck.rating.id_rating : null
           };
         });
 
@@ -1144,9 +1144,15 @@ const ViewProfile: React.FC = () => {
                         </span>
                         <button
                           className="btn btn-outline-warning btn-sm"
-                          onClick={() => {
+                          onClick={async () => {
                             setSelectedEmployee(employee);
                             setRatingValue(employeeRatings[employee.id_profile_sender] || 0);
+                            const ratingCheck = await checkExistingRating(
+                              selectedJob?.id_job ?? 0,
+                              currentUserId,
+                              employee.id_profile_sender
+                            );
+                            setExistingRatingId(ratingCheck.exists ? ratingCheck.rating.id_rating : null);
                           }}
                           data-bs-toggle="modal"
                           data-bs-target="#rateEmployeeModal"
@@ -1452,22 +1458,26 @@ const ViewProfile: React.FC = () => {
                       <button
                         className="btn btn-danger"
                         onClick={async () => {
-                          if (confirm('Are you sure you want to delete this rating?')) {
-                            try {
-                              const response = await fetch(`/api/rating?id_subject=${selectedEmployee.id_profile_sender}&id_job=${selectedEmployee.id_job}`, {
-                                method: 'DELETE',
-                              });
-                              if (response.ok) {
-                                setEmployeeRatings(prev => ({
-                                  ...prev,
-                                  [selectedEmployee.id_profile_sender]: null
-                                }));
-                                const closeButton = document.querySelector('[data-bs-dismiss="modal"]') as HTMLElement;
-                                closeButton?.click();
-                              }
-                            } catch (error) {
-                              console.error('Error deleting rating:', error);
+                          if (!existingRatingId || !confirm('Are you sure you want to delete this rating?')) {
+                            return;
+                          }
+                          
+                          try {
+                            const response = await fetch(`/api/rating?id=${existingRatingId}`, {
+                              method: 'DELETE',
+                            });
+                            
+                            if (response.ok) {
+                              setEmployeeRatings(prev => ({
+                                ...prev,
+                                [selectedEmployee.id_profile_sender]: null
+                              }));
+                              const closeButton = document.querySelector('[data-bs-dismiss="modal"]') as HTMLElement;
+                              closeButton?.click();
                             }
+                          } catch (error) {
+                            console.error('Error deleting rating:', error);
+                            alert('Failed to delete rating');
                           }
                         }}
                       >
@@ -1479,12 +1489,13 @@ const ViewProfile: React.FC = () => {
                       onClick={async () => {
                         if (!ratingValue) return;
                         
-                        const method = employeeRatings[selectedEmployee.id_profile_sender] !== null 
-                          ? 'PATCH' 
-                          : 'POST';
+                        const method = existingRatingId ? 'PATCH' : 'POST';
+                        const url = existingRatingId ? 
+                          `/api/rating?id=${existingRatingId}` : 
+                          '/api/rating';
                         
                         try {
-                          const response = await fetch('/api/rating', {
+                          const response = await fetch(url, {
                             method,
                             headers: {
                               'Content-Type': 'application/json',
@@ -1492,7 +1503,7 @@ const ViewProfile: React.FC = () => {
                             body: JSON.stringify({
                               id_user: currentUserId,
                               id_subject: selectedEmployee.id_profile_sender,
-                              id_job: selectedEmployee.id_job,
+                              id_job: selectedJob?.id_job,
                               value: ratingValue
                             }),
                           });
@@ -1507,13 +1518,12 @@ const ViewProfile: React.FC = () => {
                           }
                         } catch (error) {
                           console.error('Error updating rating:', error);
+                          alert('Failed to update rating');
                         }
                       }}
                       disabled={!ratingValue}
                     >
-                      {employeeRatings[selectedEmployee.id_profile_sender] !== null 
-                        ? 'Update Rating' 
-                        : 'Submit Rating'}
+                      {existingRatingId ? 'Update Rating' : 'Submit Rating'}
                     </button>
                   </div>
                 </div>
