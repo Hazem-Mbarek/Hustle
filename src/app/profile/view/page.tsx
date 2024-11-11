@@ -41,6 +41,14 @@ interface Request {
   location: string;
   time: string;
   id_profile_sender: number;
+  average_rating?: number;
+}
+
+interface Employee {
+  id_profile_sender: number;
+  bid: number;
+  id_request: number;
+  average_rating?: number;
 }
 
 const ViewProfile: React.FC = () => {
@@ -70,6 +78,7 @@ const ViewProfile: React.FC = () => {
   const [hoveredRating, setHoveredRating] = useState<number>(0);
   const [existingRatingId, setExistingRatingId] = useState<number | null>(null);
   const [jobEmployees, setJobEmployees] = useState<{ [key: number]: Request[] }>({});
+  const [employeeRatings, setEmployeeRatings] = useState<{ [key: number]: number }>({});
 
   useEffect(() => {
     fetchProfile();
@@ -529,6 +538,29 @@ const ViewProfile: React.FC = () => {
       const response = await fetch(`/api/request?accepted_job_id=${jobId}`);
       if (response.ok) {
         const data = await response.json();
+        
+        // Fetch all ratings in parallel
+        const ratingPromises = data.map(async (employee: Request) => {
+          try {
+            const ratingResponse = await fetch(`/api/rating?id_subject=${employee.id_profile_sender}`);
+            const ratingData = await ratingResponse.json();
+            // Changed this line to properly handle null ratings
+            return { 
+              id: employee.id_profile_sender, 
+              rating: ratingData.exists ? ratingData.rating : null 
+            };
+          } catch (error) {
+            return { id: employee.id_profile_sender, rating: null };
+          }
+        });
+
+        const ratings = await Promise.all(ratingPromises);
+        // Changed this to properly preserve null values
+        const ratingMap = Object.fromEntries(
+          ratings.map(({ id, rating }) => [id, rating])
+        );
+
+        setEmployeeRatings(ratingMap);
         setJobEmployees(prev => ({
           ...prev,
           [jobId]: data
@@ -536,6 +568,20 @@ const ViewProfile: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch employees:', error);
+    }
+  };
+
+  const fetchWorkerRating = async (workerId: number) => {
+    try {
+      const response = await fetch(`/api/rating/${workerId}`);
+      if (response.ok) {
+        const data = await response.json();
+        return data.average_rating || 0;
+      }
+      return 0;
+    } catch (error) {
+      console.error('Error fetching rating:', error);
+      return 0;
     }
   };
 
@@ -694,14 +740,21 @@ const ViewProfile: React.FC = () => {
                                   <div className="ms-3">
                                     <h6 className="mb-2">Accepted Employees:</h6>
                                     <div className="list-group">
-                                      {jobEmployees[job.id_job].map((employee) => (
-                                        <div 
-                                          key={employee.id_request}
-                                          className="list-group-item-light p-2 mb-1 rounded"
-                                        >
+                                      {jobEmployees[job.id_job]?.map((employee) => (
+                                        <div key={employee.id_request}>
                                           <div className="d-flex justify-content-between align-items-center">
                                             <span>Worker ID: {employee.id_profile_sender}</span>
                                             <span>Bid: ${employee.bid}</span>
+                                          </div>
+                                          <div className="text-warning">
+                                            {employeeRatings[employee.id_profile_sender] ? (
+                                              <>
+                                                <i className="bi bi-star-fill"></i>
+                                                <span className="ms-1">{employeeRatings[employee.id_profile_sender].toFixed(1)}</span>
+                                              </>
+                                            ) : (
+                                              <span className="text-muted">No ratings</span>
+                                            )}
                                           </div>
                                         </div>
                                       ))}
@@ -1062,7 +1115,22 @@ const ViewProfile: React.FC = () => {
                       key={employee.id_request}
                       className="list-group-item d-flex justify-content-between align-items-center"
                     >
-                      <span>Worker ID: {employee.id_profile_sender}</span>
+                      <div className="d-flex align-items-center gap-3">
+                        <span>Worker ID: {employee.id_profile_sender}</span>
+                        <div className="d-flex align-items-center">
+                          <span className="me-1">Rating:</span>
+                          <div className="text-warning">
+                            {employeeRatings[employee.id_profile_sender] ? (
+                              <>
+                                <i className="bi bi-star-fill"></i>
+                                <span className="ms-1">{employeeRatings[employee.id_profile_sender].toFixed(1)}</span>
+                              </>
+                            ) : (
+                              <span className="text-muted">No ratings</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                       <span className="badge bg-primary rounded-pill">
                         Bid: ${employee.bid}
                       </span>
