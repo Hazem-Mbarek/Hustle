@@ -142,16 +142,29 @@ export default function Job() {
         body: JSON.stringify(requestData),
       });
 
-      if (response.ok) {
-        alert('Application submitted successfully!');
-      } else {
-        const errorData = await response.json();
-        console.error('Server response:', errorData);
-        alert(errorData.message || 'Failed to submit application');
+      if (!response.ok) {
+        if (response.status === 409) {
+          alert('You have already applied for this job');
+          return;
+        }
+        
+        let errorMessage = 'Failed to submit application';
+        try {
+          const errorData = await response.json();
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch {
+          // If JSON parsing fails, use default error message
+        }
+        alert(errorMessage);
+        return;
       }
+
+      alert('Application submitted successfully!');
     } catch (error) {
-      console.error('Error submitting application:', error);
-      alert('Error submitting application. Please try again.');
+      console.error('Request failed:', error);
+      alert('Failed to submit application. Please try again.');
     }
   };
 

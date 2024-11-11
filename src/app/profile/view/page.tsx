@@ -40,6 +40,7 @@ interface Request {
   pay: number;
   location: string;
   time: string;
+  id_profile_sender: number;
 }
 
 const ViewProfile: React.FC = () => {
@@ -68,6 +69,7 @@ const ViewProfile: React.FC = () => {
   const [ratingValue, setRatingValue] = useState(0);
   const [hoveredRating, setHoveredRating] = useState<number>(0);
   const [existingRatingId, setExistingRatingId] = useState<number | null>(null);
+  const [jobEmployees, setJobEmployees] = useState<{ [key: number]: Request[] }>({});
 
   useEffect(() => {
     fetchProfile();
@@ -522,6 +524,21 @@ const ViewProfile: React.FC = () => {
     await fetchJobCreatorProfile(request.id_profile_receiver);
   };
 
+  const fetchJobEmployees = async (jobId: number) => {
+    try {
+      const response = await fetch(`/api/request?accepted_job_id=${jobId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setJobEmployees(prev => ({
+          ...prev,
+          [jobId]: data
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to fetch employees:', error);
+    }
+  };
+
   if (!profile) return <div>Loading...</div>;
 
   return (
@@ -665,6 +682,33 @@ const ViewProfile: React.FC = () => {
                               <div className="text-muted mt-2 mb-2">
                                 {new Date(job.time).toLocaleString()}
                               </div>
+                              <div className="mt-3">
+                                <button
+                                  className="btn btn-link p-0 text-decoration-none mb-2"
+                                  onClick={() => fetchJobEmployees(job.id_job)}
+                                >
+                                  Show Accepted Employees
+                                </button>
+                                
+                                {jobEmployees[job.id_job]?.length > 0 && (
+                                  <div className="ms-3">
+                                    <h6 className="mb-2">Accepted Employees:</h6>
+                                    <div className="list-group">
+                                      {jobEmployees[job.id_job].map((employee) => (
+                                        <div 
+                                          key={employee.id_request}
+                                          className="list-group-item-light p-2 mb-1 rounded"
+                                        >
+                                          <div className="d-flex justify-content-between align-items-center">
+                                            <span>Worker ID: {employee.id_profile_sender}</span>
+                                            <span>Bid: ${employee.bid}</span>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                               <div className="d-flex justify-content-end">
                                 <button 
                                   className="btn btn-outline-primary btn-sm me-2"
@@ -675,9 +719,12 @@ const ViewProfile: React.FC = () => {
                                   }}
                                   data-bs-toggle="modal"
                                   data-bs-target="#jobDetailsModal"
-                                  onClick={() => setSelectedJob(job)}
+                                  onClick={() => {
+                                    setSelectedJob(job);
+                                    fetchJobEmployees(job.id_job);
+                                  }}
                                 >
-                                  View
+                                  View Employees
                                 </button>
                                 <button 
                                   className="btn btn-outline-warning btn-sm me-2"
@@ -986,7 +1033,7 @@ const ViewProfile: React.FC = () => {
         </div>
       </div>
 
-      {/* Simplified Job Details Modal */}
+      {/* Job Details Modal */}
       <div
         className="modal fade"
         id="jobDetailsModal"
@@ -998,7 +1045,7 @@ const ViewProfile: React.FC = () => {
           <div className="modal-content">
             <div className="modal-header">
               <h5 className="modal-title" id="jobDetailsModalLabel">
-                {selectedJob?.title}
+                Accepted Employees
               </h5>
               <button
                 type="button"
@@ -1008,14 +1055,23 @@ const ViewProfile: React.FC = () => {
               ></button>
             </div>
             <div className="modal-body">
-              <p>{selectedJob?.description}</p>
-              <div className="d-flex flex-column gap-2">
-                <div>Category: {selectedJob?.category}</div>
-                <div>State: {selectedJob?.state}</div>
-                <div>Location: {selectedJob?.location}</div>
-                <div>Pay: ${selectedJob?.pay}/hr</div>
-                <div>Workers Needed: {selectedJob?.num_workers}</div>
-              </div>
+              {jobEmployees[selectedJob?.id_job ?? 0]?.length > 0 ? (
+                <div className="list-group">
+                  {jobEmployees[selectedJob?.id_job ?? 0].map((employee) => (
+                    <div 
+                      key={employee.id_request}
+                      className="list-group-item d-flex justify-content-between align-items-center"
+                    >
+                      <span>Worker ID: {employee.id_profile_sender}</span>
+                      <span className="badge bg-primary rounded-pill">
+                        Bid: ${employee.bid}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted">No accepted employees yet.</p>
+              )}
             </div>
             <div className="modal-footer">
               <button
