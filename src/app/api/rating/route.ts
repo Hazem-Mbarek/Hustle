@@ -14,7 +14,7 @@ interface RatingData {
 // CREATE (POST)
 export async function POST(request: Request) {
   const pool = initDB();
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const authToken = cookieStore.get('auth_token');
 
   if (!authToken) {
@@ -100,8 +100,27 @@ export async function GET(request: Request) {
   const id = searchParams.get('id');
   const id_subject = searchParams.get('id_subject');
   const job_id = searchParams.get('job_id');
+  const check_id_job = searchParams.get('check_id_job');
+  const check_id_user = searchParams.get('check_id_user');
+  const check_id_subject = searchParams.get('check_id_subject');
 
   try {
+    if (check_id_job && check_id_user && check_id_subject) {
+      const [existingRating] = await pool.query(
+        `SELECT id_rating, value FROM ratings 
+         WHERE id_job = ? 
+         AND id_user = ? 
+         AND id_subject = ?`,
+        [check_id_job, check_id_user, check_id_subject]
+      );
+      
+      const rating = (existingRating as any[])[0];
+      return NextResponse.json({ 
+        exists: rating ? true : false,
+        rating: rating || null
+      });
+    }
+    
     if (id) {
       // Get specific rating
       const [rows] = await pool.query('SELECT * FROM ratings WHERE id_rating = ?', [id]);

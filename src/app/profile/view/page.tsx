@@ -60,6 +60,13 @@ const ViewProfile: React.FC = () => {
   const [activeView, setActiveView] = useState('posted');
   const [editingRequest, setEditingRequest] = useState<Request | null>(null);
   const [jobCreatorProfile, setJobCreatorProfile] = useState<UserProfile | null>(null);
+  const [ratingExists, setRatingExists] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(0);
+  const [currentRating, setCurrentRating] = useState(0);
+  const [newRating, setNewRating] = useState(0);
+  const [showRatingForm, setShowRatingForm] = useState(false);
+  const [ratingValue, setRatingValue] = useState(0);
+  const [existingRatingId, setExistingRatingId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchProfile();
@@ -280,6 +287,79 @@ const ViewProfile: React.FC = () => {
     } catch (error) {
       console.error('Failed to load profile:', error);
     }
+  };
+
+  const checkExistingRating = async (jobId: number, userId: number, subjectId: number) => {
+    const response = await fetch(
+      `/api/rating?check_id_job=${jobId}&check_id_user=${userId}&check_id_subject=${subjectId}`
+    );
+    const data = await response.json();
+    return data.exists;
+  };
+
+  useEffect(() => {
+    const checkRating = async () => {
+      if (selectedRequest && currentUserId) {
+        try {
+          const response = await fetch(
+            `/api/rating?check_id_job=${selectedRequest.id_job}&check_id_user=${currentUserId}&check_id_subject=${selectedRequest.id_profile_receiver}`
+          );
+          const data = await response.json();
+          setRatingExists(data.exists);
+          if (data.rating) {
+            setRatingValue(data.rating.value);
+            setExistingRatingId(data.rating.id_rating);
+          }
+        } catch (error) {
+          console.error('Error checking rating:', error);
+        }
+      }
+    };
+    checkRating();
+  }, [selectedRequest, currentUserId]);
+
+  const handleRatingSubmit = async () => {
+    if (!selectedRequest || !currentUserId || !jobCreatorProfile) return;
+
+    const ratingData = {
+      id_user: currentUserId,
+      id_subject: jobCreatorProfile.id_profile,
+      value: ratingValue,
+      id_job: selectedRequest.id_job
+    };
+
+    try {
+      const response = await fetch('/api/rating' + (ratingExists ? `?id=${existingRatingId}` : ''), {
+        method: ratingExists ? 'PATCH' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(ratingData),
+      });
+
+      if (response.ok) {
+        // Refresh the job creator profile to show updated rating
+        await fetchJobCreatorProfile(jobCreatorProfile.id_profile);
+        alert(`Rating ${ratingExists ? 'updated' : 'submitted'} successfully!`);
+      } else {
+        throw new Error('Failed to submit rating');
+      }
+    } catch (error) {
+      console.error('Error submitting rating:', error);
+      alert('Failed to submit rating. Please try again.');
+    }
+  };
+
+  const handleRatingUpdate = (value: number) => {
+    setCurrentRating(value);
+  };
+
+  const handleSubmit = async () => {
+    // Implement POST request to create new rating
+  };
+
+  const handleUpdateSubmit = async () => {
+    // Implement PATCH request to update existing rating
   };
 
   if (!profile) return <div>Loading...</div>;
@@ -712,6 +792,56 @@ const ViewProfile: React.FC = () => {
                   <div className="text-muted mb-2">
                     <i className="bi bi-envelope me-2"></i>
                     {jobCreatorProfile.email}
+                  </div>
+                  
+                  {/* Add Rating Section */}
+                  <div className="mt-4 w-100">
+                    <h5 className="mb-3">Rate this employer</h5>
+                    {ratingExists ? (
+                      // Update Rating Form
+                      <div className="rating-form">
+                        <div className="stars mb-3">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <span 
+                              key={star}
+                              onClick={() => setRatingValue(star)}
+                              style={{ cursor: 'pointer' }}
+                              className={`fs-4 ${star <= ratingValue ? 'text-warning' : 'text-muted'}`}
+                            >
+                              ★
+                            </span>
+                          ))}
+                        </div>
+                        <button 
+                          className="btn btn-primary"
+                          onClick={handleRatingSubmit}
+                        >
+                          Update Rating
+                        </button>
+                      </div>
+                    ) : (
+                      // New Rating Form
+                      <div className="rating-form">
+                        <div className="stars mb-3">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <span 
+                              key={star}
+                              onClick={() => setRatingValue(star)}
+                              style={{ cursor: 'pointer' }}
+                              className={`fs-4 ${star <= ratingValue ? 'text-warning' : 'text-muted'}`}
+                            >
+                              ★
+                            </span>
+                          ))}
+                        </div>
+                        <button 
+                          className="btn btn-primary"
+                          onClick={handleRatingSubmit}
+                        >
+                          Submit Rating
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
