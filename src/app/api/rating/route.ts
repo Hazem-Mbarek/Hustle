@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import { initDB } from '@/lib/db';
 import { OkPacket } from 'mysql2';
-import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
 
 interface RatingData {
   id_user: number;
@@ -14,15 +12,10 @@ interface RatingData {
 // CREATE (POST)
 export async function POST(request: Request) {
   const pool = initDB();
-  const cookieStore = await cookies();
-  const authToken = cookieStore.get('auth_token');
-
-  if (!authToken) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-  }
 
   try {
-    const ratingData: RatingData = await request.json();
+    const ratingData = await request.json();
+    console.log('Received rating data:', ratingData);
 
     // Validate rating value
     if (ratingData.value < 1 || ratingData.value > 5) {
@@ -31,36 +24,10 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // Check if both profiles exist
-    const [profiles] = await pool.query(
-      'SELECT * FROM profiles WHERE id_profile IN (?, ?)',
-      [ratingData.id_user, ratingData.id_subject]
-    );
-
-    if ((profiles as any[]).length !== 2) {
-      return NextResponse.json({ 
-        message: 'One or both profiles not found' 
-      }, { status: 404 });
-    }
-
-    // If job ID is provided, verify it exists
-    if (ratingData.id_job) {
-      const [job] = await pool.query(
-        'SELECT * FROM jobs WHERE id_job = ?',
-        [ratingData.id_job]
-      );
-
-      if ((job as any[]).length === 0) {
-        return NextResponse.json({ 
-          message: 'Job not found' 
-        }, { status: 404 });
-      }
-    }
-
     // Insert new rating
     const [result] = await pool.query(
       'INSERT INTO ratings (id_user, id_subject, value, id_job) VALUES (?, ?, ?, ?)',
-      [ratingData.id_user, ratingData.id_subject, ratingData.value, ratingData.id_job || null]
+      [ratingData.id_user, ratingData.id_subject, ratingData.value, ratingData.id_job]
     );
 
     // Update average rating
@@ -76,7 +43,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ 
       message: 'Rating created successfully',
-      id: (result as OkPacket).insertId,
       rating: {
         id_rating: (result as OkPacket).insertId,
         ...ratingData
@@ -87,23 +53,27 @@ export async function POST(request: Request) {
     console.error('Failed to create rating:', error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
   }
-} 
+}
 
 // GET all ratings or by id_subject
 export async function GET(request: Request) {
   const pool = initDB();
   const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
-  const id_subject = searchParams.get('id_subject');
-  const job_id = searchParams.get('job_id');
   const check_id_job = searchParams.get('check_id_job');
   const check_id_user = searchParams.get('check_id_user');
   const check_id_subject = searchParams.get('check_id_subject');
 
   try {
     if (check_id_job && check_id_user && check_id_subject) {
+      console.log('Checking rating with params:', {
+        check_id_job,
+        check_id_user,
+        check_id_subject
+      });
+
       const [existingRating] = await pool.query(
-        `SELECT id_rating, value FROM ratings 
+        `SELECT id_rating, value 
+         FROM ratings 
          WHERE id_job = ? 
          AND id_user = ? 
          AND id_subject = ?`,
@@ -111,40 +81,15 @@ export async function GET(request: Request) {
       );
       
       const rating = (existingRating as any[])[0];
+      console.log('Found rating:', rating);
+
       return NextResponse.json({ 
         exists: rating ? true : false,
         rating: rating || null
       });
     }
     
-    if (id) {
-      // Get specific rating
-      const [rows] = await pool.query('SELECT * FROM ratings WHERE id_rating = ?', [id]);
-      const ratings = rows as any[];
-      
-      if (ratings.length === 0) {
-        return NextResponse.json({ message: 'Rating not found' }, { status: 404 });
-      }
-      
-      return NextResponse.json(ratings[0]);
-    } else if (id_subject) {
-      // Get ratings for specific subject
-      const [rows] = await pool.query('SELECT * FROM ratings WHERE id_subject = ?', [id_subject]);
-      return NextResponse.json(rows);
-    } else if (job_id) {
-      // Get ratings for specific job
-      const [rows] = await pool.query('SELECT * FROM ratings WHERE id_job = ?', [job_id]);
-      
-      if ((rows as any[]).length === 0) {
-        return NextResponse.json({ message: 'No ratings found for this job' }, { status: 404 });
-      }
-      
-      return NextResponse.json(rows);
-    } else {
-      // Get all ratings
-      const [rows] = await pool.query('SELECT * FROM ratings');
-      return NextResponse.json(rows);
-    }
+    return NextResponse.json({ exists: false, rating: null });
   } catch (error) {
     console.error('Database query failed:', error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
@@ -212,12 +157,6 @@ export async function PATCH(request: Request) {
   const pool = initDB();
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
-  const cookieStore = await cookies();
-  const authToken = cookieStore.get('auth_token');
-
-  if (!authToken) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-  }
 
   if (!id) {
     return NextResponse.json({ message: 'Rating ID is required' }, { status: 400 });

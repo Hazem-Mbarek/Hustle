@@ -65,7 +65,7 @@ const ViewProfile: React.FC = () => {
   const [currentRating, setCurrentRating] = useState(0);
   const [newRating, setNewRating] = useState(0);
   const [showRatingForm, setShowRatingForm] = useState(false);
-  const [ratingValue, setRatingValue] = useState<number>(0);
+  const [ratingValue, setRatingValue] = useState(0);
   const [hoveredRating, setHoveredRating] = useState<number>(0);
   const [existingRatingId, setExistingRatingId] = useState<number | null>(null);
 
@@ -298,31 +298,41 @@ const ViewProfile: React.FC = () => {
     return data.exists;
   };
 
-  useEffect(() => {
-    const checkRating = async () => {
-      if (selectedRequest && currentUserId) {
-        try {
-          const response = await fetch(
-            `/api/rating?check_id_job=${selectedRequest.id_job}&check_id_user=${currentUserId}&check_id_subject=${selectedRequest.id_profile_receiver}`
-          );
-          const data = await response.json();
-          setRatingExists(data.exists);
-          if (data.rating) {
-            setRatingValue(data.rating.value);
-            setExistingRatingId(data.rating.id_rating);
-          }
-        } catch (error) {
-          console.error('Error checking rating:', error);
+  const checkRating = async () => {
+    if (selectedRequest && currentUserId && jobCreatorProfile) {
+      try {
+        const response = await fetch(
+          `/api/rating?check_id_job=${selectedRequest.id_job}&check_id_user=${currentUserId}&check_id_subject=${jobCreatorProfile.id_profile}`
+        );
+        const data = await response.json();
+        console.log('Rating check response:', data);
+        
+        setRatingExists(data.exists);
+        if (data.rating) {
+          setRatingValue(data.rating.value);
+          setExistingRatingId(data.rating.id_rating);
+        } else {
+          setRatingValue(0);
+          setExistingRatingId(null);
         }
+      } catch (error) {
+        console.error('Error checking rating:', error);
       }
-    };
-    checkRating();
-  }, [selectedRequest, currentUserId]);
+    }
+  };
 
-  const StarRating = () => {
+  // Move the useEffect that uses checkRating after the function definition
+  useEffect(() => {
+    if (selectedRequest && currentUserId && jobCreatorProfile) {
+      checkRating();
+    }
+  }, [selectedRequest?.id_job, currentUserId, jobCreatorProfile?.id_profile]);
+
+  // Add this component for the rating UI
+  const RatingInterface = () => {
     return (
       <div className="rating-container">
-        <h5>Rate this employer</h5>
+        <h5>{ratingExists ? 'Current Rating' : 'Rate this employer'}</h5>
         <div className="stars-container mb-3">
           {[1, 2, 3, 4, 5].map((star) => (
             <span
@@ -339,43 +349,51 @@ const ViewProfile: React.FC = () => {
             </span>
           ))}
         </div>
-        <button
-          className="btn btn-primary"
-          onClick={handleRatingSubmit}
-          disabled={!ratingValue}
-        >
-          Submit Rating
-        </button>
+        
+        {ratingExists ? (
+          // Update button for existing rating
+          <div className="d-flex gap-2">
+            <button
+              className="btn btn-warning"
+              onClick={handleRatingUpdate}
+              disabled={!ratingValue || ratingValue === currentRating}
+            >
+              Update Rating
+            </button>
+            <button
+              className="btn btn-danger"
+              onClick={handleRatingDelete}
+            >
+              Delete Rating
+            </button>
+          </div>
+        ) : (
+          // Submit button for new rating
+          <button
+            className="btn btn-primary"
+            onClick={handleRatingSubmit}
+            disabled={!ratingValue}
+          >
+            Submit Rating
+          </button>
+        )}
       </div>
     );
   };
 
+  // Add these handler functions
   const handleRatingSubmit = async () => {
-    console.log('Submit clicked with:', {
-      ratingValue,
-      selectedRequest,
-      currentUserId,
-      jobCreatorProfile
-    });
-
     if (!ratingValue || !selectedRequest || !currentUserId || !jobCreatorProfile) {
-      console.error('Missing required data:', {
-        ratingValue,
-        selectedRequest,
-        currentUserId,
-        jobCreatorProfile
-      });
+      console.error('Missing required data');
       return;
     }
 
     const ratingData = {
       id_user: currentUserId,
-      id_subject: jobCreatorProfile.id_profile, // Use jobCreatorProfile instead of selectedRequest
+      id_subject: jobCreatorProfile.id_profile,
       value: ratingValue,
       id_job: selectedRequest.id_job
     };
-
-    console.log('Sending rating data:', ratingData);
 
     try {
       const response = await fetch('/api/rating', {
@@ -386,29 +404,91 @@ const ViewProfile: React.FC = () => {
         body: JSON.stringify(ratingData),
       });
 
-      console.log('Response status:', response.status);
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Rating submitted successfully:', data);
-        alert('Rating submitted successfully!');
-        // Reset the rating value
-        setRatingValue(0);
-        // Refresh the job creator profile to show updated rating
-        await fetchJobCreatorProfile(jobCreatorProfile.id_profile);
-      } else {
+      if (!response.ok) {
         const errorData = await response.json();
-        console.error('Server error:', errorData);
         throw new Error(errorData.message || 'Failed to submit rating');
       }
+
+      const data = await response.json();
+      console.log('Rating submission response:', data);
+      alert('Rating submitted successfully!');
+      await fetchJobCreatorProfile(jobCreatorProfile.id_profile);
+      await checkRating();
     } catch (error) {
       console.error('Error submitting rating:', error);
       alert('Failed to submit rating. Please try again.');
     }
   };
 
-  const handleRatingUpdate = (value: number) => {
-    setCurrentRating(value);
+  const handleRatingUpdate = async () => {
+    if (!ratingValue || !selectedRequest || !currentUserId || !jobCreatorProfile || !existingRatingId) {
+      console.error('Missing required data');
+      return;
+    }
+
+    const ratingData = {
+      id_user: currentUserId,
+      id_subject: jobCreatorProfile.id_profile,
+      value: ratingValue,
+      id_job: selectedRequest.id_job
+    };
+
+    try {
+      const response = await fetch(`/api/rating?id=${existingRatingId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(ratingData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update rating');
+      }
+
+      const data = await response.json();
+      console.log('Rating update response:', data);
+      alert('Rating updated successfully!');
+      await fetchJobCreatorProfile(jobCreatorProfile.id_profile);
+      await checkRating();
+    } catch (error) {
+      console.error('Error updating rating:', error);
+      alert('Failed to update rating. Please try again.');
+    }
+  };
+
+  const handleRatingDelete = async () => {
+    if (!existingRatingId) {
+      console.error('No rating to delete');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to delete this rating?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/rating?id=${existingRatingId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete rating');
+      }
+
+      alert('Rating deleted successfully!');
+      if (jobCreatorProfile) {
+        await fetchJobCreatorProfile(jobCreatorProfile.id_profile);
+      }
+      setRatingExists(false);
+      setRatingValue(0);
+      setExistingRatingId(null);
+    } catch (error) {
+      console.error('Error deleting rating:', error);
+      alert('Failed to delete rating. Please try again.');
+    }
   };
 
   const handleSubmit = async () => {
@@ -871,31 +951,9 @@ const ViewProfile: React.FC = () => {
                     {jobCreatorProfile.email}
                   </div>
                   
-                  {/* Add Rating Section */}
+                  {/* Add Rating Interface */}
                   <div className="mt-4 w-100">
-                    <div className="stars-container mb-3">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <span
-                          key={star}
-                          onClick={() => setRatingValue(star)}
-                          onMouseEnter={() => setHoveredRating(star)}
-                          onMouseLeave={() => setHoveredRating(0)}
-                          style={{ cursor: 'pointer', fontSize: '24px' }}
-                          className={`star ${
-                            star <= (hoveredRating || ratingValue) ? 'text-warning' : 'text-muted'
-                          }`}
-                        >
-                          ★
-                        </span>
-                      ))}
-                    </div>
-                    <button
-                      className="btn btn-primary"
-                      onClick={handleRatingSubmit}
-                      disabled={!ratingValue}
-                    >
-                      Submit Rating
-                    </button>
+                    <RatingInterface />
                   </div>
                 </div>
               ) : (
