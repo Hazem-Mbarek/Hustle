@@ -62,6 +62,8 @@ export async function POST(request: Request) {
 // READ (GET)
 export async function GET(request: Request) {
   const pool = initDB();
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
 
   try {
     const [rows] = await pool.query(`
@@ -69,12 +71,12 @@ export async function GET(request: Request) {
         p.*,
         u.first_name,
         u.last_name,
-        u.email 
+        u.email,
+        COALESCE(p.average_rating, 0) as average_rating
       FROM profiles p
       INNER JOIN users u ON p.id_user = u.id_user
-      ORDER BY p.id_profile DESC
-      LIMIT 1
-    `);
+      ${id ? 'WHERE p.id_profile = ?' : 'ORDER BY p.id_profile DESC LIMIT 1'}
+    `, id ? [id] : []);
 
     if (!Array.isArray(rows) || rows.length === 0) {
       return NextResponse.json({ message: 'No profile found' }, { status: 404 });

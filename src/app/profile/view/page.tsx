@@ -10,6 +10,7 @@ interface UserProfile {
   first_name: string;
   last_name: string;
   email: string;
+  average_rating: number;
 }
 
 const ViewProfile: React.FC = () => {
@@ -34,7 +35,15 @@ const ViewProfile: React.FC = () => {
 
   const fetchProfile = async () => {
     try {
-      const response = await fetch('/api/profile');
+      // First get the profile ID from the auth endpoint
+      const authResponse = await fetch('/api/auth/profile');
+      if (!authResponse.ok) {
+        throw new Error('Failed to get profile ID');
+      }
+      const { profileId } = await authResponse.json();
+      
+      // Then fetch the full profile data with the ID
+      const response = await fetch(`/api/profile?id=${profileId}`);
       if (response.ok) {
         const data = await response.json();
         setProfile(data);
@@ -53,6 +62,25 @@ const ViewProfile: React.FC = () => {
           <div className="card shadow-sm">
             <div className="card-body text-center">
               <h2 className="mb-4">Profile</h2>
+              
+              <div className="mb-4">
+                <div className="d-flex flex-column align-items-center gap-2">
+                  <div className="d-flex flex-column align-items-center">
+                    <small className="text-muted">Average Rating</small>
+                    <div className="stars">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <span 
+                          key={star} 
+                          className={`fs-4 ${star <= Number(profile.average_rating) ? 'text-warning' : 'text-muted'}`}
+                        >
+                          ★
+                        </span>
+                      ))}
+                    </div>
+                    <span className="fs-5">{Number(profile.average_rating).toFixed(1)}</span>
+                  </div>
+                </div>
+              </div>
               
               {imageUrl && (
                 <div className="mb-4">
