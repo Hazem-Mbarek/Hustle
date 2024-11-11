@@ -84,6 +84,7 @@ export async function GET(request: Request) {
   const receiver_id = searchParams.get('receiver_id');
   const pending = searchParams.get('pending');
   const status = searchParams.get('status');
+  const accepted_job_id = searchParams.get('accepted_job_id');
   const cookieStore = await cookies();
   const authToken = cookieStore.get('auth_token');
 
@@ -172,6 +173,20 @@ export async function GET(request: Request) {
         console.error('Database query failed:', error);
         return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
       }
+    }
+
+    if (accepted_job_id) {
+      const [rows] = await pool.query(`
+        SELECT r.*, j.title, j.description, j.category, j.state, 
+               j.num_workers, j.pay, j.location, j.time
+        FROM requests r
+        JOIN jobs j ON r.id_job = j.id_job
+        WHERE r.id_job = ?
+        AND r.status = 'accepted'
+        ORDER BY r.id_request DESC`,
+        [accepted_job_id]
+      );
+      return NextResponse.json(rows);
     }
 
     // Rest of the existing GET logic
