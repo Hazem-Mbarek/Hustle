@@ -13,11 +13,24 @@ interface UserProfile {
   average_rating: number;
 }
 
+interface Job {
+  id_job: number;
+  title: string;
+  description: string;
+  category: string;
+  state: string;
+  num_workers: number;
+  pay: number;
+  location: string;
+  time: string;
+}
+
 const ViewProfile: React.FC = () => {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [imageUrl, setImageUrl] = useState<string>('');
   const [error, setError] = useState('');
+  const [jobs, setJobs] = useState<Job[]>([]);
 
   useEffect(() => {
     fetchProfile();
@@ -33,6 +46,18 @@ const ViewProfile: React.FC = () => {
     }
   }, [profile]);
 
+  const fetchJobs = async (profileId: number) => {
+    try {
+      const response = await fetch(`/api/job?profile_id=${profileId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setJobs(data);
+      }
+    } catch (error) {
+      console.error('Failed to load jobs:', error);
+    }
+  };
+
   const fetchProfile = async () => {
     try {
       // First get the profile ID from the auth endpoint
@@ -47,9 +72,31 @@ const ViewProfile: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         setProfile(data);
+        // Fetch jobs after getting profile
+        await fetchJobs(profileId);
       }
     } catch (error) {
       setError('Failed to load profile');
+    }
+  };
+
+  // Add deleteJob function
+  const deleteJob = async (jobId: number) => {
+    try {
+      const response = await fetch(`/api/job?id=${jobId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // Remove the deleted job from the state
+        setJobs(jobs.filter(job => job.id_job !== jobId));
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete job');
+      }
+    } catch (error) {
+      console.error('Error deleting job:', error);
+      alert('Failed to delete job. Please try again.');
     }
   };
 
@@ -139,6 +186,78 @@ const ViewProfile: React.FC = () => {
                   <p><strong>Name:</strong> {profile.first_name} {profile.last_name}</p>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div className="card mt-4 border-0">
+            <div className="card-body">
+              <h4 className="card-title mb-4">My Posted Jobs</h4>
+              
+              {jobs.length === 0 ? (
+                <p className="text-muted">No jobs posted yet.</p>
+              ) : (
+                <div className="list-group">
+                  {jobs.map((job) => (
+                    <div 
+                      key={job.id_job} 
+                      className="list-group-item border-0 mb-3 rounded-4"
+                      style={{ 
+                        backgroundColor: '#f8f9fa',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                      }}
+                    >
+                      <div className="d-flex flex-column">
+                        <h5 className="mb-2">
+                          <span style={{ color: '#0066FF' }}>{job.title}</span>
+                        </h5>
+                        <p className="mb-3">{job.description}</p>
+                        <div className="d-flex align-items-center gap-3">
+                          <span>
+                            <span className="me-1">📍</span>
+                            {job.location}
+                          </span>
+                          <span>
+                            <span className="me-1">💰</span>
+                            ${job.pay}
+                          </span>
+                          <span>
+                            <span className="me-1">👥</span>
+                            {job.num_workers} workers needed
+                          </span>
+                        </div>
+                        <div className="d-flex justify-content-end mt-3">
+                          <button 
+                            className="btn btn-outline-primary btn-sm me-2"
+                            style={{
+                              borderRadius: '20px',
+                              paddingLeft: '20px',
+                              paddingRight: '20px'
+                            }}
+                            onClick={() => router.push(`/jobs/${job.id_job}`)}
+                          >
+                            View
+                          </button>
+                          <button 
+                            className="btn btn-outline-danger btn-sm"
+                            style={{
+                              borderRadius: '20px',
+                              paddingLeft: '20px',
+                              paddingRight: '20px'
+                            }}
+                            onClick={() => {
+                              if (window.confirm('Are you sure you want to delete this job?')) {
+                                deleteJob(job.id_job);
+                              }
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

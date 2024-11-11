@@ -21,7 +21,7 @@ interface JobData {
 export async function POST(request: Request) {
   const pool = initDB();
   const cookieStore = cookies();
-  const authToken = cookieStore.get('auth_token');
+  const authToken = await cookieStore.get('auth_token');
 
   if (!authToken) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -30,8 +30,19 @@ export async function POST(request: Request) {
   try {
     // Decode the JWT token to get user information
     const decoded = jwt.verify(authToken.value, process.env.JWT_SECRET || 'your-secret-key') as any;
-    const userId = decoded.userId;
-
+    
+    // Get the profile ID for the authenticated user
+    const [profileRows] = await pool.query(
+      'SELECT id_profile FROM profiles WHERE id_user = ?',
+      [decoded.userId]
+    );
+    
+    const profiles = profileRows as any[];
+    if (!profiles.length) {
+      return NextResponse.json({ message: 'Profile not found' }, { status: 404 });
+    }
+    
+    const profileId = profiles[0].id_profile;
     const jobData = await request.json();
 
     const [result] = await pool.query(
@@ -42,7 +53,7 @@ export async function POST(request: Request) {
       [
         jobData.title,
         jobData.description,
-        userId, // Use the ID from the token instead of the submitted data
+        profileId, // Use the profile ID we just retrieved
         jobData.category,
         jobData.state,
         jobData.num_workers,
@@ -59,7 +70,10 @@ export async function POST(request: Request) {
 
   } catch (error) {
     console.error('Failed to create job:', error);
-    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ 
+      message: 'Failed to create job',
+      error: (error as Error).message 
+    }, { status: 500 });
   }
 }
 
@@ -68,6 +82,7 @@ export async function GET(request: Request) {
   const pool = initDB();
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
+  const profile_id = searchParams.get('profile_id');
 
   try {
     if (id) {
@@ -85,6 +100,15 @@ export async function GET(request: Request) {
       }
       
       return NextResponse.json(jobs[0]);
+    } else if (profile_id) {
+      // Get all jobs for a specific profile
+      const [rows] = await pool.query(`
+        SELECT j.*, p.id_profile as id_employer 
+        FROM Jobs j
+        JOIN Profiles p ON j.profile_id = p.id_profile
+        WHERE j.profile_id = ?
+      `, [profile_id]);
+      return NextResponse.json(rows);
     } else {
       // Get all jobs with employer information
       const [rows] = await pool.query(`
@@ -163,8 +187,18 @@ export async function DELETE(request: Request) {
   }
 
   try {
+    // Start a transaction
+    await pool.query('START TRANSACTION');
+
+    // First delete related ratings
+    await pool.query('DELETE FROM Ratings WHERE id_job = ?', [id]);
+
+    // Then delete the job
     const [result] = await pool.query('DELETE FROM Jobs WHERE id_job = ?', [id]);
     
+    // Commit the transaction
+    await pool.query('COMMIT');
+
     const affectedRows = (result as OkPacket).affectedRows;
     
     if (affectedRows === 0) {
@@ -174,8 +208,13 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ message: 'Job deleted successfully' }, { status: 200 });
 
   } catch (error) {
+    // Rollback in case of error
+    await pool.query('ROLLBACK');
     console.error('Failed to delete job:', error);
-    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ 
+      message: 'Failed to delete job',
+      error: (error as Error).message 
+    }, { status: 500 });
   }
 }
 
