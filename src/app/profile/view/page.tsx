@@ -29,6 +29,7 @@ interface Job {
 interface Request {
   id_request: number;
   id_job: number;
+  id_profile_receiver: number;
   status: string;
   bid: number;
   title: string;
@@ -58,6 +59,7 @@ const ViewProfile: React.FC = () => {
   const [pendingCurrentPage, setPendingCurrentPage] = useState(1);
   const [activeView, setActiveView] = useState('posted');
   const [editingRequest, setEditingRequest] = useState<Request | null>(null);
+  const [jobCreatorProfile, setJobCreatorProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     fetchProfile();
@@ -265,6 +267,18 @@ const ViewProfile: React.FC = () => {
     } catch (error) {
       console.error('Error deleting request:', error);
       alert('Failed to delete request. Please try again.');
+    }
+  };
+
+  const fetchJobCreatorProfile = async (profileId: number) => {
+    try {
+      const response = await fetch(`/api/profile?id=${profileId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setJobCreatorProfile(data);
+      }
+    } catch (error) {
+      console.error('Failed to load profile:', error);
     }
   };
 
@@ -517,9 +531,12 @@ const ViewProfile: React.FC = () => {
                                   }}
                                   data-bs-toggle="modal"
                                   data-bs-target="#requestDetailsModal"
-                                  onClick={() => setSelectedRequest(request)}
+                                  onClick={async () => {
+                                    setSelectedRequest(request);
+                                    await fetchJobCreatorProfile(request.id_profile_receiver);
+                                  }}
                                 >
-                                  View Details
+                                  View Employer
                                 </button>
                               </div>
                             </div>
@@ -648,32 +665,77 @@ const ViewProfile: React.FC = () => {
           <div className="modal-content">
             <div className="modal-header">
               <h5 className="modal-title" id="requestDetailsModalLabel">
-                {selectedRequest?.title}
+                {activeView === 'accepted' ? 'Job Creator Profile' : selectedRequest?.title}
               </h5>
               <button
                 type="button"
                 className="btn-close"
                 data-bs-dismiss="modal"
                 aria-label="Close"
+                onClick={() => setJobCreatorProfile(null)}
               ></button>
             </div>
             <div className="modal-body">
-              <p>{selectedRequest?.description}</p>
-              <div className="d-flex flex-column gap-2">
-                <div>Category: {selectedRequest?.category}</div>
-                <div>State: {selectedRequest?.state}</div>
-                <div>Location: {selectedRequest?.location}</div>
-                <div>Original Pay: ${selectedRequest?.pay}/hr</div>
-                <div>Your Bid: ${selectedRequest?.bid}</div>
-                <div>Workers Needed: {selectedRequest?.num_workers}</div>
-                <div>Status: {selectedRequest?.status}</div>
-              </div>
+              {activeView === 'accepted' && jobCreatorProfile ? (
+                <div className="d-flex flex-column align-items-center">
+                  {jobCreatorProfile.image && (
+                    <div className="mb-4">
+                      <img
+                        src={`data:image/jpeg;base64,${jobCreatorProfile.image}`}
+                        alt="Profile"
+                        style={{
+                          width: '150px',
+                          height: '150px',
+                          objectFit: 'cover',
+                          borderRadius: '50%'
+                        }}
+                      />
+                    </div>
+                  )}
+                  <h4 className="mb-3">{jobCreatorProfile.first_name} {jobCreatorProfile.last_name}</h4>
+                  <div className="d-flex align-items-center mb-3">
+                    <div className="stars me-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <span 
+                          key={star} 
+                          className={`fs-5 ${star <= Number(jobCreatorProfile.average_rating) ? 'text-warning' : 'text-muted'}`}
+                        >
+                          ★
+                        </span>
+                      ))}
+                    </div>
+                    <span className="text-muted">
+                      ({Number(jobCreatorProfile.average_rating).toFixed(1)})
+                    </span>
+                  </div>
+                  <p className="text-center mb-3">{jobCreatorProfile.description}</p>
+                  <div className="text-muted mb-2">
+                    <i className="bi bi-envelope me-2"></i>
+                    {jobCreatorProfile.email}
+                  </div>
+                </div>
+              ) : (
+                // Existing request details view for non-accepted requests
+                <>
+                  <p>{selectedRequest?.description}</p>
+                  <div className="d-flex flex-column gap-2">
+                    <div>Category: {selectedRequest?.category}</div>
+                    <div>State: {selectedRequest?.state}</div>
+                    <div>Location: {selectedRequest?.location}</div>
+                    <div>Original Pay: ${selectedRequest?.pay}/hr</div>
+                    <div>Your Bid: ${selectedRequest?.bid}</div>
+                    <div>Workers Needed: {selectedRequest?.num_workers}</div>
+                    <div>Status: {selectedRequest?.status}</div>
+                  </div>
+                </>
+              )}
             </div>
             <div className="modal-footer">
               <button
                 type="button"
                 className="btn btn-secondary"
                 data-bs-dismiss="modal"
+                onClick={() => setJobCreatorProfile(null)}
               >
                 Close
               </button>
