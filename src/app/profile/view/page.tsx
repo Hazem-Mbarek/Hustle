@@ -65,7 +65,8 @@ const ViewProfile: React.FC = () => {
   const [currentRating, setCurrentRating] = useState(0);
   const [newRating, setNewRating] = useState(0);
   const [showRatingForm, setShowRatingForm] = useState(false);
-  const [ratingValue, setRatingValue] = useState(0);
+  const [ratingValue, setRatingValue] = useState<number>(0);
+  const [hoveredRating, setHoveredRating] = useState<number>(0);
   const [existingRatingId, setExistingRatingId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -318,31 +319,87 @@ const ViewProfile: React.FC = () => {
     checkRating();
   }, [selectedRequest, currentUserId]);
 
+  const StarRating = () => {
+    return (
+      <div className="rating-container">
+        <h5>Rate this employer</h5>
+        <div className="stars-container mb-3">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <span
+              key={star}
+              onClick={() => setRatingValue(star)}
+              onMouseEnter={() => setHoveredRating(star)}
+              onMouseLeave={() => setHoveredRating(0)}
+              style={{ cursor: 'pointer', fontSize: '24px' }}
+              className={`star ${
+                star <= (hoveredRating || ratingValue) ? 'text-warning' : 'text-muted'
+              }`}
+            >
+              ★
+            </span>
+          ))}
+        </div>
+        <button
+          className="btn btn-primary"
+          onClick={handleRatingSubmit}
+          disabled={!ratingValue}
+        >
+          Submit Rating
+        </button>
+      </div>
+    );
+  };
+
   const handleRatingSubmit = async () => {
-    if (!selectedRequest || !currentUserId || !jobCreatorProfile) return;
+    console.log('Submit clicked with:', {
+      ratingValue,
+      selectedRequest,
+      currentUserId,
+      jobCreatorProfile
+    });
+
+    if (!ratingValue || !selectedRequest || !currentUserId || !jobCreatorProfile) {
+      console.error('Missing required data:', {
+        ratingValue,
+        selectedRequest,
+        currentUserId,
+        jobCreatorProfile
+      });
+      return;
+    }
 
     const ratingData = {
       id_user: currentUserId,
-      id_subject: jobCreatorProfile.id_profile,
+      id_subject: jobCreatorProfile.id_profile, // Use jobCreatorProfile instead of selectedRequest
       value: ratingValue,
       id_job: selectedRequest.id_job
     };
 
+    console.log('Sending rating data:', ratingData);
+
     try {
-      const response = await fetch('/api/rating' + (ratingExists ? `?id=${existingRatingId}` : ''), {
-        method: ratingExists ? 'PATCH' : 'POST',
+      const response = await fetch('/api/rating', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(ratingData),
       });
 
+      console.log('Response status:', response.status);
+      
       if (response.ok) {
+        const data = await response.json();
+        console.log('Rating submitted successfully:', data);
+        alert('Rating submitted successfully!');
+        // Reset the rating value
+        setRatingValue(0);
         // Refresh the job creator profile to show updated rating
         await fetchJobCreatorProfile(jobCreatorProfile.id_profile);
-        alert(`Rating ${ratingExists ? 'updated' : 'submitted'} successfully!`);
       } else {
-        throw new Error('Failed to submit rating');
+        const errorData = await response.json();
+        console.error('Server error:', errorData);
+        throw new Error(errorData.message || 'Failed to submit rating');
       }
     } catch (error) {
       console.error('Error submitting rating:', error);
@@ -360,6 +417,29 @@ const ViewProfile: React.FC = () => {
 
   const handleUpdateSubmit = async () => {
     // Implement PATCH request to update existing rating
+  };
+
+  // Make sure we're getting the currentUserId when the component loads
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      try {
+        const response = await fetch('/api/auth/profile');
+        if (response.ok) {
+          const data = await response.json();
+          setCurrentUserId(data.profileId);
+        }
+      } catch (error) {
+        console.error('Error fetching current user:', error);
+      }
+    };
+
+    getCurrentUser();
+  }, []);
+
+  // Update the click handler for viewing employer
+  const handleViewEmployer = async (request: Request) => {
+    setSelectedRequest(request);
+    await fetchJobCreatorProfile(request.id_profile_receiver);
   };
 
   if (!profile) return <div>Loading...</div>;
@@ -611,10 +691,7 @@ const ViewProfile: React.FC = () => {
                                   }}
                                   data-bs-toggle="modal"
                                   data-bs-target="#requestDetailsModal"
-                                  onClick={async () => {
-                                    setSelectedRequest(request);
-                                    await fetchJobCreatorProfile(request.id_profile_receiver);
-                                  }}
+                                  onClick={() => handleViewEmployer(request)}
                                 >
                                   View Employer
                                 </button>
@@ -796,52 +873,29 @@ const ViewProfile: React.FC = () => {
                   
                   {/* Add Rating Section */}
                   <div className="mt-4 w-100">
-                    <h5 className="mb-3">Rate this employer</h5>
-                    {ratingExists ? (
-                      // Update Rating Form
-                      <div className="rating-form">
-                        <div className="stars mb-3">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <span 
-                              key={star}
-                              onClick={() => setRatingValue(star)}
-                              style={{ cursor: 'pointer' }}
-                              className={`fs-4 ${star <= ratingValue ? 'text-warning' : 'text-muted'}`}
-                            >
-                              ★
-                            </span>
-                          ))}
-                        </div>
-                        <button 
-                          className="btn btn-primary"
-                          onClick={handleRatingSubmit}
+                    <div className="stars-container mb-3">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <span
+                          key={star}
+                          onClick={() => setRatingValue(star)}
+                          onMouseEnter={() => setHoveredRating(star)}
+                          onMouseLeave={() => setHoveredRating(0)}
+                          style={{ cursor: 'pointer', fontSize: '24px' }}
+                          className={`star ${
+                            star <= (hoveredRating || ratingValue) ? 'text-warning' : 'text-muted'
+                          }`}
                         >
-                          Update Rating
-                        </button>
-                      </div>
-                    ) : (
-                      // New Rating Form
-                      <div className="rating-form">
-                        <div className="stars mb-3">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <span 
-                              key={star}
-                              onClick={() => setRatingValue(star)}
-                              style={{ cursor: 'pointer' }}
-                              className={`fs-4 ${star <= ratingValue ? 'text-warning' : 'text-muted'}`}
-                            >
-                              ★
-                            </span>
-                          ))}
-                        </div>
-                        <button 
-                          className="btn btn-primary"
-                          onClick={handleRatingSubmit}
-                        >
-                          Submit Rating
-                        </button>
-                      </div>
-                    )}
+                          ★
+                        </span>
+                      ))}
+                    </div>
+                    <button
+                      className="btn btn-primary"
+                      onClick={handleRatingSubmit}
+                      disabled={!ratingValue}
+                    >
+                      Submit Rating
+                    </button>
                   </div>
                 </div>
               ) : (

@@ -24,6 +24,13 @@ export async function POST(request: Request) {
   try {
     const ratingData: RatingData = await request.json();
 
+    // Validate rating value
+    if (ratingData.value < 1 || ratingData.value > 5) {
+      return NextResponse.json({ 
+        message: 'Rating value must be between 1 and 5' 
+      }, { status: 400 });
+    }
+
     // Check if both profiles exist
     const [profiles] = await pool.query(
       'SELECT * FROM profiles WHERE id_profile IN (?, ?)',
@@ -50,28 +57,13 @@ export async function POST(request: Request) {
       }
     }
 
-    // Check if rating already exists
-    const [existingRating] = await pool.query(
-      `SELECT * FROM ratings 
-       WHERE id_user = ? 
-       AND id_subject = ? 
-       AND COALESCE(id_job, 0) = COALESCE(?, 0)`,
-      [ratingData.id_user, ratingData.id_subject, ratingData.id_job]
-    );
-
-    if ((existingRating as any[]).length > 0) {
-      return NextResponse.json({ 
-        message: 'Rating already exists for this user and subject with the same job' 
-      }, { status: 409 });
-    }
-
     // Insert new rating
     const [result] = await pool.query(
       'INSERT INTO ratings (id_user, id_subject, value, id_job) VALUES (?, ?, ?, ?)',
       [ratingData.id_user, ratingData.id_subject, ratingData.value, ratingData.id_job || null]
     );
 
-    // Update average rating in profiles table
+    // Update average rating
     const [avgRating] = await pool.query(
       'SELECT AVG(value) as avg_rating FROM ratings WHERE id_subject = ?',
       [ratingData.id_subject]
@@ -84,7 +76,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ 
       message: 'Rating created successfully',
-      id: (result as OkPacket).insertId 
+      id: (result as OkPacket).insertId,
+      rating: {
+        id_rating: (result as OkPacket).insertId,
+        ...ratingData
+      }
     }, { status: 201 });
 
   } catch (error) {
@@ -216,6 +212,12 @@ export async function PATCH(request: Request) {
   const pool = initDB();
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
+  const cookieStore = await cookies();
+  const authToken = cookieStore.get('auth_token');
+
+  if (!authToken) {
+    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+  }
 
   if (!id) {
     return NextResponse.json({ message: 'Rating ID is required' }, { status: 400 });
@@ -224,7 +226,14 @@ export async function PATCH(request: Request) {
   try {
     const ratingData: RatingData = await request.json();
 
-    // Check if rating exists
+    // Validate rating value
+    if (ratingData.value < 1 || ratingData.value > 5) {
+      return NextResponse.json({ 
+        message: 'Rating value must be between 1 and 5' 
+      }, { status: 400 });
+    }
+
+    // Check if rating exists and get current data
     const [existingRating] = await pool.query(
       'SELECT * FROM ratings WHERE id_rating = ?',
       [id]
@@ -235,7 +244,7 @@ export async function PATCH(request: Request) {
     }
 
     // Update rating
-    const [result] = await pool.query(
+    await pool.query(
       'UPDATE ratings SET value = ? WHERE id_rating = ?',
       [ratingData.value, id]
     );
@@ -252,7 +261,16 @@ export async function PATCH(request: Request) {
       [(avgRating as any[])[0].avg_rating, id_subject]
     );
 
-    return NextResponse.json({ message: 'Rating updated successfully' }, { status: 200 });
+    // Get updated rating
+    const [updatedRating] = await pool.query(
+      'SELECT * FROM ratings WHERE id_rating = ?',
+      [id]
+    );
+
+    return NextResponse.json({ 
+      message: 'Rating updated successfully',
+      rating: (updatedRating as any[])[0]
+    }, { status: 200 });
 
   } catch (error) {
     console.error('Failed to update rating:', error);
