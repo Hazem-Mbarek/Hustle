@@ -109,9 +109,19 @@ export default function JobAdd() {
                     required
                   >
                     <option value="">Select a category</option>
-                    <option value="Full-time">Full-time</option>
-                    <option value="Part-time">Part-time</option>
-                    <option value="Contract">Contract</option>
+                    <option value="Warehouse Worker">Warehouse Worker</option>
+                    <option value="Handyman">Handyman</option>
+                    <option value="Delivery">Delivery</option>
+                    <option value="Gardener">Gardener</option>
+                    <option value="Pet Sitter">Pet Sitter</option>
+                    <option value="Babysitter">Babysitter</option>
+                    <option value="Janitor">Janitor</option>
+                    <option value="Security Guard">Security Guard</option>
+                    <option value="Musician/Performer">Musician/Performer</option>
+                    <option value="Waiter/Cook">Waiter/Cook</option>
+                    <option value="Cashier">Cashier</option>
+                    <option value="Tutor">Tutor</option>
+                    <option value="Other">Other</option>
                   </select>
                 </div>
 
