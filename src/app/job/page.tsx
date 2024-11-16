@@ -33,6 +33,8 @@ export default function Job() {
   const [profileId, setProfileId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchField, setSearchField] = useState('title');
+  const [sortField, setSortField] = useState('time');
+  const [sortDirection, setSortDirection] = useState('desc');
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -95,7 +97,27 @@ export default function Job() {
   // Get current jobs
   const indexOfLastJob = currentPage * jobsPerPage;
   const indexOfFirstJob = indexOfLastJob - jobsPerPage;
-  const filteredJobs = jobs.filter((job) => {
+  const sortJobs = (jobs: Job[]) => {
+    return [...jobs].sort((a, b) => {
+      switch (sortField) {
+        case 'time':
+          return sortDirection === 'desc' 
+            ? new Date(b.time).getTime() - new Date(a.time).getTime()
+            : new Date(a.time).getTime() - new Date(b.time).getTime();
+        case 'pay':
+          return sortDirection === 'desc' 
+            ? b.pay - a.pay
+            : a.pay - b.pay;
+        case 'category':
+          return sortDirection === 'desc' 
+            ? b.category.localeCompare(a.category)
+            : a.category.localeCompare(b.category);
+        default:
+          return 0;
+      }
+    });
+  };
+  const filteredJobs = sortJobs(jobs.filter((job) => {
     const searchLower = searchTerm.toLowerCase().trim();
     
     switch (searchField) {
@@ -108,7 +130,7 @@ export default function Job() {
       default:
         return true;
     }
-  });
+  }));
   const currentJobs = filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
 
   // Change page
@@ -231,33 +253,55 @@ export default function Job() {
       {/* Bootstrap Search Bar and Dropdown */}
       <div className="container mb-4 pt-10">
         <div className="row justify-content-center">
-          <div className="col-md-6">
-            <div className="input-group shadow-sm">
-              <select 
-                className="form-select" 
-                style={{ maxWidth: '150px' }}
-                onChange={(e) => setSearchField(e.target.value)}
-                value={searchField}
-              >
-                <option value="title">Title</option>
-                <option value="description">Description</option>
-                <option value="location">Location</option>
-              </select>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Search jobs..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <button 
-                className="btn btn-success" 
-                type="button"
-                onClick={() => setCurrentPage(1)}
-                style={{ backgroundColor: '#17a589', borderColor: '#17a589' }}
-              >
-                Search
-              </button>
+          <div className="col-md-8">
+            <div className="d-flex gap-2">
+              {/* Search Section */}
+              <div className="input-group shadow-sm">
+                <select 
+                  className="form-select" 
+                  style={{ maxWidth: '150px' }}
+                  onChange={(e) => setSearchField(e.target.value)}
+                  value={searchField}
+                >
+                  <option value="title">Title</option>
+                  <option value="description">Description</option>
+                  <option value="location">Location</option>
+                </select>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search jobs..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <button 
+                  className="btn btn-success" 
+                  type="button"
+                  onClick={() => setCurrentPage(1)}
+                  style={{ backgroundColor: '#17a589', borderColor: '#17a589' }}
+                >
+                  Search
+                </button>
+              </div>
+
+              {/* Sort Section */}
+              <div className="input-group shadow-sm" style={{ maxWidth: '200px' }}>
+                <select 
+                  className="form-select"
+                  onChange={(e) => setSortField(e.target.value)}
+                  value={sortField}
+                >
+                  <option value="time">Date Posted</option>
+                  <option value="pay">Pay Rate</option>
+                  <option value="category">Category</option>
+                </select>
+                <button 
+                  className="btn btn-outline-secondary"
+                  onClick={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')}
+                >
+                  {sortDirection === 'asc' ? '↑' : '↓'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
