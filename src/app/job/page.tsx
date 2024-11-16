@@ -247,11 +247,23 @@ export default function Job() {
             <div key={job.id_job} className="col-md-4 mb-4">
               <div className="card card-custom mx-auto">
                 <img
-                  src="/images/logo4.png"
+                  src={job.category === 'Warehouse Worker' ? '/images/WarehouseWorker.jpg' :
+                      job.category === 'Handyman' ? '/images/Handyman.jpg' :
+                      job.category === 'Delivery' ? '/images/Delivery.jpg' :
+                      job.category === 'Gardener' ? '/images/Gardener.jpg' :
+                      job.category === 'Pet Sitter' ? '/images/PetSitter.jpg' :
+                      job.category === 'Babysitter' ? '/images/Babysitter.jpg' :
+                      job.category === 'Janitor' ? '/images/Janitor.jpg' :
+                      job.category === 'Security Guard' ? '/images/SecurityGuard.jpg' :
+                      job.category === 'Musician/Performer' ? '/images/MusicianPerformer.jpg' :
+                      job.category === 'Waiter/Cook' ? '/images/WaiterCook.jpg' :
+                      job.category === 'Cashier' ? '/images/Cashier.jpg' :
+                      job.category === 'Tutor' ? '/images/Tutor.jpg' :
+                      '/images/logo4.png'}
                   className="card-img-top card-image"
                   alt={job.title}
                   onError={(e: any) => {
-                    e.target.src = '/images/c.jpg';
+                    e.target.src = '/images/logo4.png';
                   }}
                 />
                 <div className="card-body">
@@ -358,11 +370,23 @@ export default function Job() {
                   <div className="row">
                     <div className="col-md-6">
                       <img
-                        src="/images/logo4.png"
+                        src={selectedJob.category === 'Warehouse Worker' ? '/images/WarehouseWorker.jpg' :
+                            selectedJob.category === 'Handyman' ? '/images/Handyman.jpg' :
+                            selectedJob.category === 'Delivery' ? '/images/Delivery.jpg' :
+                            selectedJob.category === 'Gardener' ? '/images/Gardener.jpg' :
+                            selectedJob.category === 'Pet Sitter' ? '/images/PetSitter.jpg' :
+                            selectedJob.category === 'Babysitter' ? '/images/Babysitter.jpg' :
+                            selectedJob.category === 'Janitor' ? '/images/Janitor.jpg' :
+                            selectedJob.category === 'Security Guard' ? '/images/SecurityGuard.jpg' :
+                            selectedJob.category === 'Musician/Performer' ? '/images/MusicianPerformer.jpg' :
+                            selectedJob.category === 'Waiter/Cook' ? '/images/WaiterCook.jpg' :
+                            selectedJob.category === 'Cashier' ? '/images/Cashier.jpg' :
+                            selectedJob.category === 'Tutor' ? '/images/Tutor.jpg' :
+                            '/images/logo4.png'}
                         className="img-fluid rounded mb-3"
                         alt={selectedJob.title}
                         onError={(e: any) => {
-                          e.target.src = '/images/c.jpg';
+                          e.target.src = '/images/logo4.png';
                         }}
                       />
                     </div>
