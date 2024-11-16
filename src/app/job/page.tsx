@@ -35,6 +35,7 @@ export default function Job() {
   const [searchField, setSearchField] = useState('title');
   const [sortField, setSortField] = useState('time');
   const [sortDirection, setSortDirection] = useState('desc');
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -108,10 +109,6 @@ export default function Job() {
           return sortDirection === 'desc' 
             ? b.pay - a.pay
             : a.pay - b.pay;
-        case 'category':
-          return sortDirection === 'desc' 
-            ? b.category.localeCompare(a.category)
-            : a.category.localeCompare(b.category);
         default:
           return 0;
       }
@@ -119,17 +116,14 @@ export default function Job() {
   };
   const filteredJobs = sortJobs(jobs.filter((job) => {
     const searchLower = searchTerm.toLowerCase().trim();
-    
-    switch (searchField) {
-      case 'title':
-        return job.title.toLowerCase().includes(searchLower);
-      case 'description':
-        return job.description.toLowerCase().includes(searchLower);
-      case 'location':
-        return job.location.toLowerCase().includes(searchLower);
-      default:
-        return true;
-    }
+    const matchesSearch = searchField === 'title' ? job.title.toLowerCase().includes(searchLower)
+      : searchField === 'description' ? job.description.toLowerCase().includes(searchLower)
+      : searchField === 'location' ? job.location.toLowerCase().includes(searchLower)
+      : true;
+
+    const matchesCategory = selectedCategory === 'all' || job.category === selectedCategory;
+
+    return matchesSearch && matchesCategory;
   }));
   const currentJobs = filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
 
@@ -284,23 +278,50 @@ export default function Job() {
                 </button>
               </div>
 
-              {/* Sort Section */}
-              <div className="input-group shadow-sm" style={{ maxWidth: '200px' }}>
-                <select 
-                  className="form-select"
-                  onChange={(e) => setSortField(e.target.value)}
-                  value={sortField}
+              {/* Sort and Filter Controls */}
+              <div className="d-flex gap-2">
+                {/* Sort Controls */}
+                <div className="input-group shadow-sm" style={{ width: '350px' }}>
+                  <select 
+                    className="form-select form-select-lg"
+                    onChange={(e) => setSortField(e.target.value)}
+                    value={sortField}
+                    style={{ fontSize: '1rem', height: '42px' }}
+                  >
+                    <option value="time">Date Posted</option>
+                    <option value="pay">Pay Rate</option>
+                  </select>
+                  <button 
+                    className="btn btn-outline-secondary"
+                    onClick={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')}
+                    style={{ width: '50px', fontSize: '1.2rem' }}
+                  >
+                    {sortDirection === 'asc' ? '↑' : '↓'}
+                  </button>
+                </div>
+
+                {/* Category Filter */}
+                <select
+                  className="form-select shadow-sm"
+                  style={{ maxWidth: '200px' }}
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
                 >
-                  <option value="time">Date Posted</option>
-                  <option value="pay">Pay Rate</option>
-                  <option value="category">Category</option>
+                  <option value="all">All Categories</option>
+                  <option value="Warehouse Worker">Warehouse Worker</option>
+                  <option value="Handyman">Handyman</option>
+                  <option value="Delivery">Delivery</option>
+                  <option value="Gardener">Gardener</option>
+                  <option value="Pet Sitter">Pet Sitter</option>
+                  <option value="Babysitter">Babysitter</option>
+                  <option value="Janitor">Janitor</option>
+                  <option value="Security Guard">Security Guard</option>
+                  <option value="Musician/Performer">Musician/Performer</option>
+                  <option value="Waiter/Cook">Waiter/Cook</option>
+                  <option value="Cashier">Cashier</option>
+                  <option value="Tutor">Tutor</option>
+                  <option value="Other">Other</option>
                 </select>
-                <button 
-                  className="btn btn-outline-secondary"
-                  onClick={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')}
-                >
-                  {sortDirection === 'asc' ? '↑' : '↓'}
-                </button>
               </div>
             </div>
           </div>
