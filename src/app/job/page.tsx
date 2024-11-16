@@ -31,6 +31,8 @@ export default function Job() {
   const router = useRouter();
   const [bidAmount, setBidAmount] = useState<number>(0);
   const [profileId, setProfileId] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchField, setSearchField] = useState('title');
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -93,13 +95,27 @@ export default function Job() {
   // Get current jobs
   const indexOfLastJob = currentPage * jobsPerPage;
   const indexOfFirstJob = indexOfLastJob - jobsPerPage;
-  const currentJobs = jobs.slice(indexOfFirstJob, indexOfLastJob);
+  const filteredJobs = jobs.filter((job) => {
+    const searchLower = searchTerm.toLowerCase().trim();
+    
+    switch (searchField) {
+      case 'title':
+        return job.title.toLowerCase().includes(searchLower);
+      case 'description':
+        return job.description.toLowerCase().includes(searchLower);
+      case 'location':
+        return job.location.toLowerCase().includes(searchLower);
+      default:
+        return true;
+    }
+  });
+  const currentJobs = filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
 
   // Change page
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   // Calculate total pages
-  const totalPages = Math.ceil(jobs.length / jobsPerPage);
+  const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
 
   // Generate page numbers
   const pageNumbers = [];
@@ -217,20 +233,27 @@ export default function Job() {
         <div className="row justify-content-center">
           <div className="col-md-6">
             <div className="input-group shadow-sm">
-              <select className="form-select" aria-label="Default select example" defaultValue="">
-                <option value="" disabled>Select a filter</option>
-                <option value="1">Filter One</option>
-                <option value="2">Filter Two</option>
-                <option value="3">Filter Three</option>
+              <select 
+                className="form-select" 
+                style={{ maxWidth: '150px' }}
+                onChange={(e) => setSearchField(e.target.value)}
+                value={searchField}
+              >
+                <option value="title">Title</option>
+                <option value="description">Description</option>
+                <option value="location">Location</option>
               </select>
               <input
                 type="text"
                 className="form-control"
-                placeholder="Search for jobs..."
+                placeholder="Search jobs..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
               <button 
                 className="btn btn-success" 
                 type="button"
+                onClick={() => setCurrentPage(1)}
                 style={{ backgroundColor: '#17a589', borderColor: '#17a589' }}
               >
                 Search
@@ -336,7 +359,7 @@ export default function Job() {
             {/* Page info with updated styling */}
             <div className="text-center mt-2">
               <small className="text-muted">
-                Showing {indexOfFirstJob + 1} to {Math.min(indexOfLastJob, jobs.length)} of {jobs.length} jobs
+                Showing {indexOfFirstJob + 1} to {Math.min(indexOfLastJob, filteredJobs.length)} of {filteredJobs.length} jobs
               </small>
             </div>
           </div>
