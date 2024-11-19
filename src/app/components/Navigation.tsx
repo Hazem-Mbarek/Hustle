@@ -113,9 +113,6 @@ export default function Navigation() {
                 <li className="nav-item">
                   <Link href="/analytics" className="nav-link text-white">Analytics</Link>
                 </li>
-                <li className="nav-item">
-                  <Link href="/recommendations" className="nav-link text-white">Recommendations</Link>
-                </li>
               </>
             )}
             
