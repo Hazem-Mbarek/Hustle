@@ -9,7 +9,11 @@ interface Message {
   timestamp: Date;
 }
 
-export default function ChatUI() {
+interface ChatUIProps {
+  chatHeight: number;
+}
+
+export default function ChatUI({ chatHeight }: ChatUIProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -116,8 +120,11 @@ export default function ChatUI() {
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex-1 overflow-y-auto">
+    <div className="flex flex-col" style={{ height: `${chatHeight}px` }}>
+      <div 
+        className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-800"
+        style={{ maxHeight: `calc(${chatHeight}px - 80px)` }}
+      >
         {messages.map((message, index) => (
           <div
             key={index}
@@ -130,8 +137,8 @@ export default function ChatUI() {
                   : 'bg-gray-200 text-gray-800'
               }`}
             >
-              <p className="text-sm">{message.content}</p>
-              <span className="text-xs opacity-70">
+              <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+              <span className="text-xs opacity-70 mt-1 block">
                 {message.timestamp.toLocaleTimeString()}
               </span>
             </div>
@@ -139,23 +146,31 @@ export default function ChatUI() {
         ))}
         <div ref={messagesEndRef} />
       </div>
-      <div className="mt-auto p-2 border-t">
-        <form onSubmit={handleSubmit} className="border-t p-3">
-          <div className="flex space-x-2">
-            <input
-              type="text"
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Type your message..."
-              className="flex-1 border rounded-full px-4 py-2 focus:outline-none focus:border-blue-500 text-sm"
-            />
-            <button
-              type="submit"
-              className="bg-blue-500 text-white rounded-full px-4 py-2 hover:bg-blue-600 transition-colors text-sm"
+      
+      <div className="p-4 border-t bg-white">
+        <form onSubmit={handleSubmit} className="flex gap-2">
+          <input 
+            type="text"
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2DD4BF]"
+            placeholder="Type your message..."
+          />
+          <button 
+            type="submit"
+            className="bg-[#2DD4BF] text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition-colors"
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              className="h-5 w-5" 
+              viewBox="0 0 20 20" 
+              fill="currentColor"
             >
-              Send
-            </button>
-          </div>
+              <path 
+                d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" 
+              />
+            </svg>
+          </button>
         </form>
       </div>
     </div>

@@ -41,14 +41,6 @@ export default function FloatingChat() {
 
   return (
     <div className="relative">
-      <div className="absolute -top-2 right-2 z-[99999]">
-        <button 
-          onClick={() => setIsMinimized(!isMinimized)}
-          className="bg-gray-800/80 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-gray-700 transition-all duration-200 text-xl font-light backdrop-blur-sm"
-        >
-          −
-        </button>
-      </div>
       {isMinimized ? (
         <button
           onClick={() => setIsMinimized(false)}
@@ -67,11 +59,12 @@ export default function FloatingChat() {
           className="bg-white rounded-xl shadow-2xl w-[300px] flex flex-col border border-gray-200"
           style={{ height: `${chatHeight}px` }}
         >
-          <div className="p-2 bg-blue-500 text-white rounded-t-xl flex justify-between items-center">
+          <div className="p-2 bg-[#2DD4BF] text-white rounded-t-xl flex justify-between items-center">
             <h3 className="font-medium text-sm">Career Assistant</h3>
             <button 
               onClick={() => setIsMinimized(true)}
-              className="hover:bg-blue-600/50 rounded-full p-1 transition-colors"
+              className="hover:bg-white/20 rounded-full p-1.5 transition-all duration-200 flex items-center justify-center"
+              aria-label="Minimize chat"
             >
               <svg 
                 xmlns="http://www.w3.org/2000/svg" 
@@ -84,14 +77,14 @@ export default function FloatingChat() {
                   strokeLinecap="round" 
                   strokeLinejoin="round" 
                   strokeWidth={2} 
-                  d="M19 9l-7 7-7-7" 
+                  d="M5 15l7-7 7 7" 
                 />
               </svg>
             </button>
           </div>
           
-          <div className="flex-1 overflow-hidden flex flex-col">
-            <ChatUI />
+          <div className="flex-1 overflow-hidden">
+            <ChatUI chatHeight={chatHeight - 44} />
           </div>
         </div>
       )}
