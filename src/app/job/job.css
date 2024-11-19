@@ -96,22 +96,3 @@
   background-color: #148f77;
   border-color: #148f77;
 }
-
-/* Add to existing CSS */
-.ai-insights {
-  background-color: #f8f9fa;
-  border-left: 4px solid #17a589;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border-radius: 4px;
-}
-
-.ai-insights h5 {
-  color: #17a589;
-  margin-bottom: 1rem;
-}
-
-.ai-insights .bi-robot {
-  color: #17a589;
-  margin-right: 0.5rem;
-}

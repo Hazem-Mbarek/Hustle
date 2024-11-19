@@ -17,7 +17,7 @@ export async function GET() {
 
     // Get average pay by category
     const [avgPayByCategory] = await pool.query(`
-      SELECT category, AVG(pay) as avgPay
+      SELECT category, ROUND(AVG(pay), 2) as avgPay
       FROM Jobs
       GROUP BY category
       ORDER BY avgPay DESC
@@ -71,20 +71,12 @@ export async function GET() {
       LIMIT 5
     `);
 
-    // Mock AI insights instead of fetching
-    const mockAiInsights = {
-      marketTrends: "Based on current data, tech and remote work sectors show strong growth.",
-      salaryAnalysis: "Average salaries are trending upward across most categories.",
-      timestamp: new Date().toISOString()
-    };
-
     return NextResponse.json({
       trendingCategories,
       avgPayByCategory,
       competitiveJobs,
       jobsOverTime,
-      recentActivity,
-      aiInsights: mockAiInsights
+      recentActivity
     });
   } catch (error) {
     console.error('Error fetching analytics:', error);
