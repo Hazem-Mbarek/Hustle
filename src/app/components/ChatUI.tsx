@@ -123,15 +123,15 @@ export default function ChatUI({ chatHeight }: ChatUIProps) {
     <div className="flex flex-col" style={{ height: `${chatHeight}px` }}>
       <div 
         className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-gray-500 scrollbar-track-gray-800"
-        style={{ maxHeight: `calc(${chatHeight}px - 80px)` }}
+        style={{ maxHeight: `calc(${chatHeight}px - 80px)`, maxWidth: "300px" }}
       >
         {messages.map((message, index) => (
           <div 
             key={index} 
-            className="p-3 rounded-lg bg-white text-black"
+            className="p-3 rounded-lg bg-white text-black overflow-hidden"
           >
-            <p className="mb-1">{message.content}</p>
-            <small className="text-white/80">{message.timestamp.toLocaleString()}</small>
+            <p className="mb-1 break-words overflow-wrap-anywhere">{message.content}</p>
+            <small className="text-gray-500">{message.timestamp.toLocaleString()}</small>
           </div>
         ))}
         <div ref={messagesEndRef} />

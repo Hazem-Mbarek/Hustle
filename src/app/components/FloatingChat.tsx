@@ -56,7 +56,7 @@ export default function FloatingChat() {
         </button>
       ) : (
         <div 
-          className="bg-white rounded-xl shadow-2xl w-[300px] flex flex-col border border-gray-200"
+          className="bg-white rounded-xl shadow-2xl w-[300px] flex flex-col border border-gray-200 max-w-[300px]"
           style={{ height: `${chatHeight}px` }}
         >
           <div className="p-2 bg-[#2DD4BF] text-black rounded-t-xl flex justify-between items-center">
