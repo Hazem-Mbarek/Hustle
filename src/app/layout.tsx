@@ -4,6 +4,7 @@ import "./globals.css";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import InstallBootstrap from "./components/installBootstrap";
 import Navigation from './components/Navigation';
+import 'aos/dist/aos.css';
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",

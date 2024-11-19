@@ -106,9 +106,14 @@ export default function Navigation() {
               <Link href="/job" className="nav-link text-white">Find Jobs</Link>
             </li>
             {isAuthenticated && (
-              <li className="nav-item">
-                <Link href="/job/add" className="nav-link text-white">Create Job</Link>
-              </li>
+              <>
+                <li className="nav-item">
+                  <Link href="/job/add" className="nav-link text-white">Create Job</Link>
+                </li>
+                <li className="nav-item">
+                  <Link href="/analytics" className="nav-link text-white">Analytics</Link>
+                </li>
+              </>
             )}
             
             {isAuthenticated ? (
