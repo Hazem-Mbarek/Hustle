@@ -9,8 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "^6.6.0",
-    "@fortawesome/free-solid-svg-icons": "^6.6.0",
+    "@fortawesome/fontawesome-svg-core": "^6.7.0",
+    "@fortawesome/free-solid-svg-icons": "^6.7.0",
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@popperjs/core": "^2.11.8",
     "@types/aos": "^3.0.7",
@@ -19,7 +19,7 @@
     "bootstrap": "^5.3.3",
     "chart.js": "^4.4.6",
     "jsonwebtoken": "^9.0.2",
-    "mysql2": "^3.11.3",
+    "mysql2": "^3.11.4",
     "next": "^15.0.3",
     "next-auth": "^4.24.10",
     "react": "^18.3.1",
