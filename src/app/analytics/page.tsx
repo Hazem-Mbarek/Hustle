@@ -23,7 +23,20 @@ interface AnalyticsData {
     date: string;
     count: number;
   }>;
+  recentActivity: Array<{
+    type: string;
+    title: string;
+    time: string;
+    category: string;
+  }>;
 }
+
+const CHART_COLORS = {
+  primary: ['#20B2AA', '#26CBC2', '#2CE4DA', '#5EEAE2', '#8EFFF8'],  // Light Sea Green shades
+  secondary: ['#475569', '#64748b', '#94a3b8', '#cbd5e1', '#e2e8f0'], // Complementary grays
+  text: '#334155',
+  grid: '#e2e8f0'
+};
 
 export default function Analytics() {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
@@ -58,7 +71,7 @@ export default function Analytics() {
     datasets: [{
       label: 'Number of Jobs',
       data: analyticsData.trendingCategories.map(item => item.count),
-      backgroundColor: '#17a589',
+      backgroundColor: '#20B2AA',  // Match navbar color
     }]
   };
 
@@ -67,7 +80,7 @@ export default function Analytics() {
     datasets: [{
       label: 'Average Pay Rate ($/hr)',
       data: analyticsData.avgPayByCategory.map(item => item.avgPay),
-      backgroundColor: '#148f77',
+      backgroundColor: '#26CBC2',  // Slightly lighter shade
     }]
   };
 
@@ -75,13 +88,7 @@ export default function Analytics() {
     labels: analyticsData.competitiveJobs.map(item => item.title),
     datasets: [{
       data: analyticsData.competitiveJobs.map(item => item.application_count),
-      backgroundColor: [
-        '#17a589',
-        '#148f77',
-        '#117864',
-        '#0e6251',
-        '#0b4c3f',
-      ],
+      backgroundColor: CHART_COLORS.primary,  // Array of Light Sea Green shades
     }]
   };
 
@@ -140,15 +147,60 @@ export default function Analytics() {
           <div className="card shadow">
             <div className="card-body">
               <h3 className="card-title">Key Statistics</h3>
-              <div className="list-group">
-                {analyticsData.trendingCategories.map((category, index) => (
-                  <div key={index} className="list-group-item d-flex justify-content-between align-items-center">
-                    {category.category}
-                    <span className="badge bg-success rounded-pill">
-                      {category.count} jobs
-                    </span>
+              <div className="bg-white rounded-xl shadow-md p-6">
+              
+                
+                <div className="space-y-6">
+                  {/* Job Counts Section */}
+                  <div>
+                    <h4 className="text-md font-semibold text-gray-600 mb-3">Job Counts</h4>
+                    <div className="space-y-2">
+                      {analyticsData.trendingCategories.map((category, index) => (
+                        <div 
+                          key={`count-${index}`}
+                          className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                        >
+                          <span className="text-gray-700 font-medium min-w-[120px]">{category.category}    </span>
+                          <span className="px-3 py-1 text-white text-sm rounded-full ml-4" style={{ backgroundColor: '#20B2AA' }}>
+                            {category.count} jobs
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
+                  
+                  {/* Latest Activity Section */}
+                  <div>
+                    <h4 className="text-md font-semibold text-gray-600 mb-3">Latest Activity</h4>
+                    <div className="space-y-2">
+                      {analyticsData.recentActivity
+                        .filter(activity => activity.type === 'New Job')
+                        .map((activity, index) => (
+                        <div 
+                          key={`activity-${index}`}
+                          className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                        >
+                          <div className="flex items-center gap-4">
+                            <span className="text-gray-700 font-medium min-w-[120px]">{activity.title} </span>
+                            <span className="text-sm text-gray-500">
+                              {new Date(activity.time).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </span>
+                          </div>
+                          <span 
+                            className="px-3 py-1 text-white text-sm rounded-full ml-4" 
+                            style={{ backgroundColor: '#20B2AA' }}
+                          >
+                            New Job
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

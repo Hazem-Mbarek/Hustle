@@ -43,11 +43,40 @@ export async function GET() {
       ORDER BY date
     `);
 
+    // Add to your existing queries
+    const [recentActivity] = await pool.query(`
+      (
+        SELECT 
+          'New Job' as type,
+          title,
+          time,
+          category
+        FROM Jobs
+        WHERE time >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+      )
+      UNION ALL
+      (
+        SELECT 
+          'Application' as type,
+          j.title,
+          j.time,
+          j.category
+        FROM Requests r
+        JOIN Jobs j ON r.id_job = j.id_job
+        WHERE r.id_request >= (
+          SELECT MAX(id_request) - 10 FROM Requests
+        )
+      )
+      ORDER BY time DESC
+      LIMIT 5
+    `);
+
     return NextResponse.json({
       trendingCategories,
       avgPayByCategory,
       competitiveJobs,
-      jobsOverTime
+      jobsOverTime,
+      recentActivity
     });
   } catch (error) {
     console.error('Error fetching analytics:', error);
