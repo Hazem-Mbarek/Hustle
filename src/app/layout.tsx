@@ -5,6 +5,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import InstallBootstrap from "./components/installBootstrap";
 import Navigation from './components/Navigation';
 import 'aos/dist/aos.css';
+import FloatingChat from './components/FloatingChat';
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -69,6 +70,9 @@ export default function RootLayout({
           </div>
         </footer>
         <InstallBootstrap />
+        <div className="fixed bottom-8 right-8 z-[99999] shadow-lg" style={{ position: 'fixed', bottom: '32px', right: '32px' }}>
+          <FloatingChat />
+        </div>
       </body>
     </html>
   );
