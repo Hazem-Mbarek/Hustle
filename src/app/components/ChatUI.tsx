@@ -126,22 +126,12 @@ export default function ChatUI({ chatHeight }: ChatUIProps) {
         style={{ maxHeight: `calc(${chatHeight}px - 80px)` }}
       >
         {messages.map((message, index) => (
-          <div
-            key={index}
-            className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
+          <div 
+            key={index} 
+            className="p-3 rounded-lg bg-white text-black"
           >
-            <div
-              className={`max-w-[70%] rounded-lg p-3 ${
-                message.isUser
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200 text-gray-800'
-              }`}
-            >
-              <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
-              <span className="text-xs opacity-70 mt-1 block">
-                {message.timestamp.toLocaleTimeString()}
-              </span>
-            </div>
+            <p className="mb-1">{message.content}</p>
+            <small className="text-white/80">{message.timestamp.toLocaleString()}</small>
           </div>
         ))}
         <div ref={messagesEndRef} />

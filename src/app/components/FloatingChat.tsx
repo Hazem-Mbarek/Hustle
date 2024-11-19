@@ -59,7 +59,7 @@ export default function FloatingChat() {
           className="bg-white rounded-xl shadow-2xl w-[300px] flex flex-col border border-gray-200"
           style={{ height: `${chatHeight}px` }}
         >
-          <div className="p-2 bg-[#2DD4BF] text-white rounded-t-xl flex justify-between items-center">
+          <div className="p-2 bg-[#2DD4BF] text-black rounded-t-xl flex justify-between items-center">
             <h3 className="font-medium text-sm">Career Assistant</h3>
             <button 
               onClick={() => setIsMinimized(true)}
