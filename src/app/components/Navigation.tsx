@@ -127,7 +127,7 @@ export default function Navigation() {
                       className="btn btn-link nav-link p-0 text-white"
                       onClick={() => setShowNotifications(!showNotifications)}
                     >
-                      <i className="bi bi-bell fs-4"></i>
+                      Notifications
                     </button>
                     
                     {showNotifications && (
@@ -160,10 +160,9 @@ export default function Navigation() {
                                           console.error('Error accepting request:', error);
                                         }
                                       }}
-                                      className="btn btn-sm btn-outline-success d-flex align-items-center justify-content-center"
-                                      style={{ width: '32px', height: '32px', borderRadius: '50%' }}
+                                      className="btn btn-sm btn-outline-success"
                                     >
-                                      <i className="bi bi-check-lg"></i>
+                                      Accept
                                     </button>
 
                                     <button
@@ -179,10 +178,9 @@ export default function Navigation() {
                                           console.error('Error deleting request:', error);
                                         }
                                       }}
-                                      className="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center"
-                                      style={{ width: '32px', height: '32px', borderRadius: '50%' }}
+                                      className="btn btn-sm btn-outline-danger"
                                     >
-                                      <i className="bi bi-x-lg"></i>
+                                      Reject
                                     </button>
                                   </div>
                                 </div>
@@ -201,7 +199,7 @@ export default function Navigation() {
                 {hasProfile && (
                   <li className="nav-item mx-2">
                     <Link href="/profile/view" className="nav-link text-white">
-                      <i className="bi bi-person-circle fs-4"></i>
+                      Profile
                     </Link>
                   </li>
                 )}
