@@ -1,0 +1,44 @@
+# Core Dependencies
+bootstrap
+@popperjs/core
+mysql2
+next-auth
+bcryptjs
+jsonwebtoken
+chart.js
+react-chartjs-2
+aos
+
+# Font Awesome Dependencies
+@fortawesome/react-fontawesome
+@fortawesome/fontawesome-svg-core
+@fortawesome/free-solid-svg-icons
+
+# Development Dependencies
+@types/bcryptjs
+@types/jsonwebtoken
+@types/aos
+
+# Installation Instructions:
+npm install bootstrap
+npm install @popperjs/core
+npm install mysql2
+npm install next-auth bcryptjs
+npm install @types/bcryptjs --save-dev
+npm install jsonwebtoken
+npm install --save-dev @types/jsonwebtoken
+npm install @fortawesome/react-fontawesome @fortawesome/fontawesome-svg-core @fortawesome/free-solid-svg-icons
+npm install chart.js react-chartjs-2
+npm install aos
+npm install @types/aos
+npm install bootstrap
+npm install @popperjs/core
+npm install mysql2
+npm install next-auth bcryptjs
+npm install @types/bcryptjs --save-dev
+npm install jsonwebtoken
+npm install --save-dev @types/jsonwebtoken
+npm install @fortawesome/react-fontawesome @fortawesome/fontawesome-svg-core @fortawesome/free-solid-svg-icons
+npm install chart.js react-chartjs-2
+npm install aos
+npm install @types/aos
